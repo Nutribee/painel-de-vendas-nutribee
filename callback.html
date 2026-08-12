@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conexão com Bling</title>
+</head>
+<body>
+  <h2>Conexão com Bling</h2>
+  <p id="status">Processando autorização...</p>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    const state = params.get("state");
+    const error = params.get("error");
+
+    const status = document.getElementById("status");
+
+    if (error) {
+      status.textContent = "A autorização foi recusada ou ocorreu um erro.";
+    } else if (code) {
+      status.innerHTML =
+        "Autorização recebida com sucesso.<br><br>" +
+        "O código foi recebido pelo Painel de Vendas.";
+      
+      console.log("Authorization code:", code);
+      console.log("State:", state);
+    } else {
+      status.textContent =
+        "Esta página é utilizada para retornar da autorização do Bling.";
+    }
+  </script>
+</body>
+</html>
