@@ -1,67 +1,102 @@
-<!DOCTYPE html>
+
+          <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Conexão com Bling</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conexão com Bling</title>
 </head>
+
 <body>
-  <h2>Conexão com Bling</h2>
-  <p id="status">Finalizando conexão...</p>
 
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get("code");
-    const error = params.get("error");
+<h1>Conexão com Bling</h1>
 
-    const status = document.getElementById("status");
+<p id="mensagem">Finalizando conexão...</p>
 
-    async function conectarBling() {
-      if (error) {
-        status.textContent = "A autorização foi recusada pelo Bling.";
-        return;
-      }
+<script>
 
-      if (!code) {
-        status.textContent = "Código de autorização não encontrado.";
-        return;
-      }
+async function conectar(){
 
-      try {
-        const response = await fetch("/api/bling", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ code })
-        });
+  const mensagem = document.getElementById("mensagem");
 
-        const data = await response.json();
+  const params = new URLSearchParams(window.location.search);
 
-       if (!response.ok) {
-  console.error("Erro retornado pela API:", data);
+  const code = params.get("code");
 
-  status.innerHTML =
-    "Erro ao finalizar a conexão com o Bling.<br><br>" +
-    "<strong>Detalhes:</strong><br>" +
-    JSON.stringify(data, null, 2)
+  if(!code){
 
-  return;
-}
+    mensagem.innerHTML =
+      "❌ Código de autorização não recebido.";
 
-        status.textContent =
-          "Bling conectado com sucesso!";
+    return;
 
-        console.log("Bling conectado:", data);
+  }
 
-      } catch (err) {
-        console.error(err);
-        status.textContent =
-          "Erro de comunicação com o servidor.";
-      }
+  try{
+
+    const resposta = await fetch("/api/bling",{
+
+      method:"POST",
+
+      headers:{
+        "Content-Type":"application/json"
+      },
+
+      body:JSON.stringify({
+        code:code
+      })
+
+    });
+
+    const dados = await resposta.json();
+
+    if(!resposta.ok || !dados.success){
+
+      throw new Error(
+        dados.error
+        ? JSON.stringify(dados.error)
+        : "Erro ao conectar com o Bling"
+      );
+
     }
 
-    conectarBling();
-  </script>
+    localStorage.setItem(
+      "bling_access_token",
+      dados.access_token
+    );
+
+    if(dados.refresh_token){
+
+      localStorage.setItem(
+        "bling_refresh_token",
+        dados.refresh_token
+      );
+
+    }
+
+    mensagem.innerHTML =
+      "<h2>✅ Bling conectado com sucesso!</h2>" +
+      "<p>Redirecionando para o painel...</p>";
+
+    setTimeout(function(){
+
+      window.location.href = "/";
+
+    },1500);
+
+  }catch(error){
+
+    mensagem.innerHTML =
+      "<h2>❌ Erro ao finalizar conexão com o Bling.</h2>" +
+      "<p>" + error.message + "</p>";
+
+  }
+
+}
+
+conectar();
+
+</script>
+
 </body>
 </html>
