@@ -27,9 +27,10 @@ export default async function handler(req, res) {
     const response = await fetch("https://www.bling.com.br/Api/v3/oauth/token", {
       method: "POST",
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Authorization": `Basic ${credentials}`
-      },
+  "Content-Type": "application/x-www-form-urlencoded",
+  "Authorization": `Basic ${credentials}`,
+  "Accept": "1.0"
+}
       body: new URLSearchParams({
         grant_type: "authorization_code",
         code: code,
