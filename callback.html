@@ -7,29 +7,57 @@
 </head>
 <body>
   <h2>Conexão com Bling</h2>
-  <p id="status">Processando autorização...</p>
+  <p id="status">Finalizando conexão...</p>
 
   <script>
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
-    const state = params.get("state");
     const error = params.get("error");
 
     const status = document.getElementById("status");
 
-    if (error) {
-      status.textContent = "A autorização foi recusada ou ocorreu um erro.";
-    } else if (code) {
-      status.innerHTML =
-        "Autorização recebida com sucesso.<br><br>" +
-        "O código foi recebido pelo Painel de Vendas.";
-      
-      console.log("Authorization code:", code);
-      console.log("State:", state);
-    } else {
-      status.textContent =
-        "Esta página é utilizada para retornar da autorização do Bling.";
+    async function conectarBling() {
+      if (error) {
+        status.textContent = "A autorização foi recusada pelo Bling.";
+        return;
+      }
+
+      if (!code) {
+        status.textContent = "Código de autorização não encontrado.";
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/bling", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ code })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          console.error(data);
+          status.textContent =
+            "Erro ao finalizar a conexão com o Bling.";
+          return;
+        }
+
+        status.textContent =
+          "Bling conectado com sucesso!";
+
+        console.log("Bling conectado:", data);
+
+      } catch (err) {
+        console.error(err);
+        status.textContent =
+          "Erro de comunicação com o servidor.";
+      }
     }
+
+    conectarBling();
   </script>
 </body>
 </html>
