@@ -44,7 +44,7 @@
   status.innerHTML =
     "Erro ao finalizar a conexão com o Bling.<br><br>" +
     "<strong>Detalhes:</strong><br>" +
-    (data.error || JSON.stringify(data));
+    JSON.stringify(data, null, 2)
 
   return;
 }
