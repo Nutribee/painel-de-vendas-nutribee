@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -6,108 +7,102 @@
 <title>Painel de Vendas Nutribee</title>
 
 <style>
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  font-family:Arial,sans-serif;
+  background:#f5f7f6;
+  color:#222;
 }
 
-body {
-  font-family: Arial, sans-serif;
-  background: #f5f7f6;
-  color: #222;
+header{
+  background:#18a957;
+  color:white;
+  padding:20px;
 }
 
-header {
-  background: #18a957;
-  color: white;
-  padding: 20px;
+header h1{font-size:24px}
+header p{margin-top:5px;opacity:.9}
+
+.container{
+  padding:20px;
+  max-width:1200px;
+  margin:auto;
 }
 
-header h1 {
-  font-size: 24px;
+.cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:15px;
+  margin-bottom:25px;
 }
 
-header p {
-  margin-top: 5px;
-  opacity: .9;
+.card{
+  background:white;
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 2px 8px rgba(0,0,0,.08);
 }
 
-.container {
-  padding: 20px;
-  max-width: 1200px;
-  margin: auto;
+.card h3{
+  font-size:14px;
+  color:#666;
+  margin-bottom:10px;
 }
 
-.cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 15px;
-  margin-bottom: 25px;
+.card strong{
+  font-size:25px;
+  color:#18a957;
 }
 
-.card {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+.section{
+  background:white;
+  padding:20px;
+  border-radius:12px;
+  margin-bottom:20px;
+  box-shadow:0 2px 8px rgba(0,0,0,.08);
 }
 
-.card h3 {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 10px;
+.section h2{margin-bottom:15px}
+
+button{
+  background:#18a957;
+  color:white;
+  border:none;
+  padding:12px 20px;
+  border-radius:8px;
+  font-size:15px;
+  cursor:pointer;
+  margin-right:8px;
 }
 
-.card strong {
-  font-size: 25px;
-  color: #18a957;
+button.secondary{
+  background:#555;
 }
 
-.section {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+.status{
+  margin-top:15px;
+  padding:12px;
+  border-radius:8px;
+  background:#f1f5f2;
 }
 
-.section h2 {
-  margin-bottom: 15px;
+table{
+  width:100%;
+  border-collapse:collapse;
 }
 
-button {
-  background: #18a957;
-  color: white;
-  border: none;
-  padding: 12px 20px;
-  border-radius: 8px;
-  font-size: 15px;
+th,td{
+  padding:12px;
+  border-bottom:1px solid #eee;
+  text-align:left;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
+th{background:#f5f7f6}
 
-th, td {
-  padding: 12px;
-  border-bottom: 1px solid #eee;
-  text-align: left;
-}
-
-th {
-  background: #f5f7f6;
-}
-
-@media(max-width:600px) {
-  .container {
-    padding: 12px;
-  }
-
-  table {
-    font-size: 13px;
-  }
+@media(max-width:600px){
+  .container{padding:12px}
+  table{font-size:13px}
 }
 </style>
 </head>
@@ -125,80 +120,403 @@ th {
 
     <div class="card">
       <h3>Faturamento</h3>
-      <strong>R$ 0,00</strong>
+      <strong id="faturamento">R$ 0,00</strong>
     </div>
 
     <div class="card">
       <h3>Custos</h3>
-      <strong>R$ 0,00</strong>
+      <strong id="custos">R$ 0,00</strong>
     </div>
 
     <div class="card">
       <h3>Lucro</h3>
-      <strong>R$ 0,00</strong>
+      <strong id="lucro">R$ 0,00</strong>
     </div>
 
     <div class="card">
       <h3>Margem</h3>
-      <strong>0%</strong>
+      <strong id="margem">0%</strong>
     </div>
 
   </div>
 
   <div class="section">
+
     <h2>Pedidos de Venda</h2>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Pedido</th>
-          <th>Marketplace</th>
-          <th>Produto</th>
-          <th>Valor</th>
-          <th>Lucro</th>
-        </tr>
-      </thead>
+    <button onclick="carregarPedidos()">🔄 Atualizar pedidos</button>
 
-      <tbody>
-        <tr>
-          <td>-</td>
-          <td>-</td>
-          <td>Nenhum pedido carregado</td>
-          <td>R$ 0,00</td>
-          <td>R$ 0,00</td>
-        </tr>
-      </tbody>
-    </table>
+    <div style="overflow-x:auto;margin-top:15px">
+
+      <table>
+        <thead>
+          <tr>
+            <th>Pedido</th>
+            <th>Cliente</th>
+            <th>Data</th>
+            <th>Valor</th>
+          </tr>
+        </thead>
+
+        <tbody id="pedidos">
+          <tr>
+            <td colspan="4">Nenhum pedido carregado.</td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+
   </div>
 
   <div class="section">
+
     <h2>Produtos</h2>
-    <p>Os produtos cadastrados no Bling aparecerão aqui.</p>
+
+    <button onclick="carregarProdutos()">📦 Carregar produtos</button>
+
+    <div style="overflow-x:auto;margin-top:15px">
+
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Produto</th>
+            <th>SKU</th>
+            <th>Preço</th>
+          </tr>
+        </thead>
+
+        <tbody id="produtos">
+          <tr>
+            <td colspan="4">Nenhum produto carregado.</td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+
   </div>
 
   <div class="section">
-    <h2>Integração</h2>
-    <p>Este painel será conectado ao Bling para receber os pedidos e produtos.</p>
-    <br>
-    <button onclick="conectarBling()">Conectar ao Bling</button>
+
+    <h2>Integração com Bling</h2>
+
+    <button onclick="conectarBling()">
+      🔗 Conectar ao Bling
+    </button>
+
+    <button class="secondary" onclick="testarConexao()">
+      🧪 Testar conexão
+    </button>
+
+    <div class="status" id="status">
+      Verificando conexão...
+    </div>
+
+  </div>
+
+</div>
 
 <script>
-function conectarBling() {
-  const clientId = "1c91f534729d1b705ae2229ea4ac0c345ce37cc7";
+
+const CLIENT_ID = "1c91f534729d1b705ae2229ea4ac0c345ce37cc7";
+
+function conectarBling(){
+
   const state = crypto.randomUUID();
+
+  localStorage.setItem("bling_state", state);
 
   const url =
     "https://www.bling.com.br/Api/v3/oauth/authorize" +
     "?response_type=code" +
-    "&client_id=" + encodeURIComponent(clientId) +
+    "&client_id=" + encodeURIComponent(CLIENT_ID) +
     "&state=" + encodeURIComponent(state);
 
   window.location.href = url;
 }
-</script>
-  </div>
 
-</div>
+
+function moeda(valor){
+
+  return Number(valor || 0).toLocaleString("pt-BR",{
+    style:"currency",
+    currency:"BRL"
+  });
+
+}
+
+
+function getToken(){
+
+  return localStorage.getItem("bling_access_token");
+
+}
+
+
+function verificarConexao(){
+
+  const token = getToken();
+
+  const status = document.getElementById("status");
+
+  if(token){
+
+    status.innerHTML =
+      "🟢 <strong>Bling conectado.</strong> O painel está pronto para buscar os dados.";
+
+  }else{
+
+    status.innerHTML =
+      "🔴 Bling ainda não conectado.";
+
+  }
+
+}
+
+
+async function testarConexao(){
+
+  const token = getToken();
+
+  if(!token){
+
+    alert("O Bling ainda não está conectado.");
+    return;
+
+  }
+
+  document.getElementById("status").innerHTML =
+    "⏳ Testando conexão...";
+
+  try{
+
+    const resposta = await fetch("/api/bling",{
+
+      method:"POST",
+
+      headers:{
+        "Content-Type":"application/json"
+      },
+
+      body:JSON.stringify({
+        action:"produtos",
+        access_token:token
+      })
+
+    });
+
+    const dados = await resposta.json();
+
+    if(!resposta.ok){
+
+      throw new Error(
+        dados.error
+        ? JSON.stringify(dados.error)
+        : "Erro ao consultar Bling"
+      );
+
+    }
+
+    document.getElementById("status").innerHTML =
+      "🟢 <strong>Conexão funcionando!</strong> Bling respondeu corretamente.";
+
+  }catch(error){
+
+    document.getElementById("status").innerHTML =
+      "🔴 Erro: " + error.message;
+
+  }
+
+}
+
+
+async function carregarProdutos(){
+
+  const token = getToken();
+
+  if(!token){
+
+    alert("Conecte o Bling primeiro.");
+    return;
+
+  }
+
+  const tabela = document.getElementById("produtos");
+
+  tabela.innerHTML =
+    "<tr><td colspan='4'>Carregando...</td></tr>";
+
+  try{
+
+    const resposta = await fetch("/api/bling",{
+
+      method:"POST",
+
+      headers:{
+        "Content-Type":"application/json"
+      },
+
+      body:JSON.stringify({
+        action:"produtos",
+        access_token:token
+      })
+
+    });
+
+    const resultado = await resposta.json();
+
+    if(!resposta.ok){
+
+      throw new Error(JSON.stringify(resultado.error));
+
+    }
+
+    const produtos = resultado.data.data || [];
+
+    if(!produtos.length){
+
+      tabela.innerHTML =
+        "<tr><td colspan='4'>Nenhum produto encontrado.</td></tr>";
+
+      return;
+
+    }
+
+    tabela.innerHTML = produtos.map(p => `
+
+      <tr>
+
+        <td>${p.id || "-"}</td>
+
+        <td>${p.nome || "-"}</td>
+
+        <td>${p.codigo || "-"}</td>
+
+        <td>${moeda(p.preco)}</td>
+
+      </tr>
+
+    `).join("");
+
+  }catch(error){
+
+    tabela.innerHTML =
+      `<tr>
+        <td colspan="4">Erro: ${error.message}</td>
+      </tr>`;
+
+  }
+
+}
+
+
+async function carregarPedidos(){
+
+  const token = getToken();
+
+  if(!token){
+
+    alert("Conecte o Bling primeiro.");
+    return;
+
+  }
+
+  const tabela = document.getElementById("pedidos");
+
+  tabela.innerHTML =
+    "<tr><td colspan='4'>Carregando...</td></tr>";
+
+  try{
+
+    const resposta = await fetch("/api/bling",{
+
+      method:"POST",
+
+      headers:{
+        "Content-Type":"application/json"
+      },
+
+      body:JSON.stringify({
+        action:"pedidos",
+        access_token:token
+      })
+
+    });
+
+    const resultado = await resposta.json();
+
+    if(!resposta.ok){
+
+      throw new Error(JSON.stringify(resultado.error));
+
+    }
+
+    const pedidos = resultado.data.data || [];
+
+    if(!pedidos.length){
+
+      tabela.innerHTML =
+        "<tr><td colspan='4'>Nenhum pedido encontrado.</td></tr>";
+
+      return;
+
+    }
+
+    let total = 0;
+
+    tabela.innerHTML = pedidos.map(p => {
+
+      const valor = Number(p.total || 0);
+
+      total += valor;
+
+      return `
+
+        <tr>
+
+          <td>${p.numero || p.id || "-"}</td>
+
+          <td>${p.contato?.nome || "-"}</td>
+
+          <td>${p.data || "-"}</td>
+
+          <td>${moeda(valor)}</td>
+
+        </tr>
+
+      `;
+
+    }).join("");
+
+    document.getElementById("faturamento").textContent =
+      moeda(total);
+
+    document.getElementById("custos").textContent =
+      "R$ 0,00";
+
+    document.getElementById("lucro").textContent =
+      moeda(total);
+
+    document.getElementById("margem").textContent =
+      total > 0 ? "100%" : "0%";
+
+  }catch(error){
+
+    tabela.innerHTML =
+      `<tr>
+        <td colspan="4">Erro: ${error.message}</td>
+      </tr>`;
+
+  }
+
+}
+
+
+verificarConexao();
+
+</script>
 
 </body>
 </html>
