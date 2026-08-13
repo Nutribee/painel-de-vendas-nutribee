@@ -38,12 +38,16 @@
 
         const data = await response.json();
 
-        if (!response.ok) {
-          console.error(data);
-          status.textContent =
-            "Erro ao finalizar a conexão com o Bling.";
-          return;
-        }
+       if (!response.ok) {
+  console.error("Erro retornado pela API:", data);
+
+  status.innerHTML =
+    "Erro ao finalizar a conexão com o Bling.<br><br>" +
+    "<strong>Detalhes:</strong><br>" +
+    (data.error || JSON.stringify(data));
+
+  return;
+}
 
         status.textContent =
           "Bling conectado com sucesso!";
