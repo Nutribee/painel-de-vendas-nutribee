@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+  export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({
       success: false,
@@ -7,67 +7,67 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { code } = req.body || {};
+    const { access_token } = req.body || {};
 
-    if (!code) {
+    if (!access_token) {
       return res.status(400).json({
         success: false,
-        error: "Authorization code não informado"
+        error: "Access token não informado"
       });
     }
 
-    const clientId = process.env.BLING_CLIENT_ID;
-    const clientSecret = process.env.BLING_CLIENT_SECRET;
+    const headers = {
+      Authorization: `Bearer ${access_token}`,
+      Accept: "application/json",
+      "enable-jwt": "1"
+    };
 
-    if (!clientId || !clientSecret) {
-      return res.status(500).json({
-        success: false,
-        error: "BLING_CLIENT_ID ou BLING_CLIENT_SECRET não configurado"
-      });
-    }
-
-    const credentials = Buffer.from(
-      `${clientId}:${clientSecret}`
-    ).toString("base64");
-
-    const body = new URLSearchParams({
-      grant_type: "authorization_code",
-      code: code
-    });
-
-    const response = await fetch(
-      "https://api.bling.com.br/Api/v3/oauth/token",
+    const produtosResponse = await fetch(
+      "https://api.bling.com.br/Api/v3/produtos?pagina=1&limite=100",
       {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          "Accept": "1.0",
-          "Authorization": `Basic ${credentials}`,
-          "enable-jwt": "1"
-        },
-        body: body.toString()
+        method: "GET",
+        headers
       }
     );
 
-    const data = await response.json();
+    const produtosData = await produtosResponse.json();
 
-    if (!response.ok) {
-      return res.status(response.status).json({
+    if (!produtosResponse.ok) {
+      return res.status(produtosResponse.status).json({
         success: false,
-        error: data
+        etapa: "produtos",
+        error: produtosData
+      });
+    }
+
+    const pedidosResponse = await fetch(
+      "https://api.bling.com.br/Api/v3/pedidos/vendas?pagina=1&limite=100",
+      {
+        method: "GET",
+        headers
+      }
+    );
+
+    const pedidosData = await pedidosResponse.json();
+
+    if (!pedidosResponse.ok) {
+      return res.status(pedidosResponse.status).json({
+        success: false,
+        etapa: "pedidos",
+        error: pedidosData
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: "Bling conectado com sucesso!",
-      access_token: data.access_token,
-      refresh_token: data.refresh_token,
-      expires_in: data.expires_in
+      produtos: produtosData.data || [],
+      pedidos: pedidosData.data || [],
+      quantidade_produtos: (produtosData.data || []).length,
+      quantidade_pedidos: (pedidosData.data || []).length
     });
 
   } catch (error) {
-    console.error("Erro na conexão com Bling:", error);
+    console.error("Erro ao buscar dados do Bling:", error);
 
     return res.status(500).json({
       success: false,
