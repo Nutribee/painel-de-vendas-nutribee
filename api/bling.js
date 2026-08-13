@@ -34,7 +34,7 @@ export default async function handler(req, res) {
       body: new URLSearchParams({
         grant_type: "authorization_code",
         code: code,
-        redirect_uri: redirectUri
+      
       })
     });
 
@@ -45,7 +45,7 @@ export default async function handler(req, res) {
     }
 
     return res.status(200).json({
-      success: true,
+      success: strue,
       message: "Bling conectado com sucesso.",
       access_token: data.access_token,
       refresh_token: data.refresh_token,
