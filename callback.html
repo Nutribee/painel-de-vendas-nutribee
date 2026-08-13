@@ -1,5 +1,5 @@
 
-          <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -9,92 +9,99 @@
 
 <body>
 
-<h1>Conexão com Bling</h1>
+<h2>Conexão com Bling</h2>
 
-<p id="mensagem">Finalizando conexão...</p>
+<p id="status">Finalizando conexão...</p>
 
 <script>
 
-async function conectar(){
+const params = new URLSearchParams(window.location.search);
+const code = params.get("code");
+const error = params.get("error");
 
-  const mensagem = document.getElementById("mensagem");
+const status = document.getElementById("status");
 
-  const params = new URLSearchParams(window.location.search);
+async function conectarBling() {
 
-  const code = params.get("code");
-
-  if(!code){
-
-    mensagem.innerHTML =
-      "❌ Código de autorização não recebido.";
-
+  if (error) {
+    status.textContent = "A autorização foi recusada pelo Bling.";
     return;
-
   }
 
-  try{
+  if (!code) {
+    status.textContent = "Código de autorização não encontrado.";
+    return;
+  }
 
-    const resposta = await fetch("/api/bling",{
+  try {
 
-      method:"POST",
+    const response = await fetch("/api/bling", {
+      method: "POST",
 
-      headers:{
-        "Content-Type":"application/json"
+      headers: {
+        "Content-Type": "application/json"
       },
 
-      body:JSON.stringify({
-        code:code
+      body: JSON.stringify({
+        code: code
       })
-
     });
 
-    const dados = await resposta.json();
+    const data = await response.json();
 
-    if(!resposta.ok || !dados.success){
+    if (!response.ok) {
 
-      throw new Error(
-        dados.error
-        ? JSON.stringify(dados.error)
-        : "Erro ao conectar com o Bling"
-      );
+      status.innerHTML =
+        "Erro ao finalizar a conexão com o Bling.<br><br>" +
+        "<strong>Detalhes:</strong><br>" +
+        JSON.stringify(data);
 
+      return;
     }
+
+    /*
+      GUARDA OS TOKENS PARA O PAINEL
+    */
 
     localStorage.setItem(
       "bling_access_token",
-      dados.access_token
+      data.access_token
     );
 
-    if(dados.refresh_token){
+    localStorage.setItem(
+      "bling_refresh_token",
+      data.refresh_token
+    );
 
-      localStorage.setItem(
-        "bling_refresh_token",
-        dados.refresh_token
-      );
+    localStorage.setItem(
+      "bling_conectado",
+      "true"
+    );
 
-    }
+    status.textContent = "Bling conectado com sucesso!";
 
-    mensagem.innerHTML =
-      "<h2>✅ Bling conectado com sucesso!</h2>" +
-      "<p>Redirecionando para o painel...</p>";
+    /*
+      VOLTA PARA O PAINEL
+    */
 
-    setTimeout(function(){
+    setTimeout(() => {
 
       window.location.href = "/";
 
-    },1500);
+    }, 1000);
 
-  }catch(error){
+  } catch (err) {
 
-    mensagem.innerHTML =
-      "<h2>❌ Erro ao finalizar conexão com o Bling.</h2>" +
-      "<p>" + error.message + "</p>";
+    console.error(err);
+
+    status.textContent =
+      "Erro de comunicação com o servidor.";
 
   }
 
 }
 
-conectar();
+conectarBling();
 
 </script>
 
