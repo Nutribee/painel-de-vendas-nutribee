@@ -180,7 +180,22 @@ th {
     <h2>Integração</h2>
     <p>Este painel será conectado ao Bling para receber os pedidos e produtos.</p>
     <br>
-    <button>Conectar ao Bling</button>
+    <button onclick="conectarBling()">Conectar ao Bling</button>
+
+<script>
+function conectarBling() {
+  const clientId = "1c91f534729d1b705ae2229ea4ac0c345ce37cc7";
+  const redirectUri = "https://painel-de-vendas-nutribee.vercel.app/callback.html";
+
+  const url =
+    "https://www.bling.com.br/Api/v3/oauth/authorize" +
+    "?response_type=code" +
+    "&client_id=" + encodeURIComponent(clientId) +
+    "&redirect_uri=" + encodeURIComponent(redirectUri);
+
+  window.location.href = url;
+}
+</script>
   </div>
 
 </div>
