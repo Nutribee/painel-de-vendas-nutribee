@@ -1,4 +1,4 @@
-  export default async function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({
       success: false,
@@ -7,7 +7,7 @@
   }
 
   try {
-    const { access_token } = req.body || {};
+    const { action, access_token } = req.body || {};
 
     if (!access_token) {
       return res.status(400).json({
@@ -16,58 +16,43 @@
       });
     }
 
-    const headers = {
-      Authorization: `Bearer ${access_token}`,
-      Accept: "application/json",
-      "enable-jwt": "1"
-    };
+    let url;
 
-    const produtosResponse = await fetch(
-      "https://api.bling.com.br/Api/v3/produtos?pagina=1&limite=100",
-      {
-        method: "GET",
-        headers
-      }
-    );
-
-    const produtosData = await produtosResponse.json();
-
-    if (!produtosResponse.ok) {
-      return res.status(produtosResponse.status).json({
+    if (action === "produtos") {
+      url = "https://api.bling.com.br/Api/v3/produtos";
+    } else if (action === "pedidos") {
+      url = "https://api.bling.com.br/Api/v3/pedidos/vendas";
+    } else {
+      return res.status(400).json({
         success: false,
-        etapa: "produtos",
-        error: produtosData
+        error: "Ação inválida. Use produtos ou pedidos."
       });
     }
 
-    const pedidosResponse = await fetch(
-      "https://api.bling.com.br/Api/v3/pedidos/vendas?pagina=1&limite=100",
-      {
-        method: "GET",
-        headers
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${access_token}`,
+        "Accept": "application/json"
       }
-    );
+    });
 
-    const pedidosData = await pedidosResponse.json();
+    const data = await response.json();
 
-    if (!pedidosResponse.ok) {
-      return res.status(pedidosResponse.status).json({
+    if (!response.ok) {
+      return res.status(response.status).json({
         success: false,
-        etapa: "pedidos",
-        error: pedidosData
+        error: data
       });
     }
 
     return res.status(200).json({
       success: true,
-      produtos: produtosData.data || [],
-      pedidos: pedidosData.data || [],
-      quantidade_produtos: (produtosData.data || []).length,
-      quantidade_pedidos: (pedidosData.data || []).length
+      data: data
     });
 
   } catch (error) {
-    console.error("Erro ao buscar dados do Bling:", error);
+    console.error("Erro na API Bling:", error);
 
     return res.status(500).json({
       success: false,
