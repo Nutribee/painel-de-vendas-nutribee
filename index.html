@@ -402,7 +402,6 @@ function formatarMoeda(valor) {
 
 
 function autorizarBling() {
-
   const clientId = "1c91f534729d1b705ae2229ea4ac0c345ce37cc7";
 
   const state = crypto.randomUUID();
@@ -418,18 +417,6 @@ function autorizarBling() {
   window.location.href = url;
 }
 
-  /*
-    IMPORTANTE:
-    Vamos configurar a URL de autorização
-    do Bling depois que confirmarmos
-    o CLIENT_ID e REDIRECT_URI.
-  */
-
-  alert(
-    "A conexão com o Bling será configurada nesta etapa."
-  );
-
-}
 
 
 // Não carregar automaticamente ainda.
