@@ -39,14 +39,14 @@ export default async function handler(req, res) {
     if (!produtosResponse.ok) {
       return res.status(produtosResponse.status).json({
         success: false,
-        error: produtos
+        error: JSON.stringify(produtos)
       });
     }
 
     if (!pedidosResponse.ok) {
       return res.status(pedidosResponse.status).json({
         success: false,
-        error: pedidos
+       error: JSON.stringify(pedidos)
       });
     }
 
