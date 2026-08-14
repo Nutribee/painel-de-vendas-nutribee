@@ -1,20 +1,257 @@
+  <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Painel de Vendas Nutribee</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f7f6;
+      color: #222;
+    }
+
+    header {
+      background: #111;
+      color: white;
+      padding: 20px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    header p {
+      margin: 6px 0 0;
+      color: #ccc;
+    }
+
+    .container {
+      padding: 20px;
+      max-width: 1400px;
+      margin: auto;
+    }
+
+    .acoes {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 8px;
+      padding: 12px 18px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .btn-principal {
+      background: #159447;
+      color: white;
+    }
+
+    .btn-secundario {
+      background: #ddd;
+      color: #222;
+    }
+
+    .status {
+      background: white;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border-left: 5px solid #159447;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .card span {
+      display: block;
+      color: #777;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .card strong {
+      font-size: 25px;
+    }
+
+    .tabela-container {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 600px;
+    }
+
+    th,
+    td {
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+    }
+
+    th {
+      background: #f0f0f0;
+    }
+
+    .vazio {
+      text-align: center;
+      padding: 30px;
+      color: #777;
+    }
+
+    .erro {
+      border-left-color: #d93025;
+      color: #b00020;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 12px;
+      }
+
+      header h1 {
+        font-size: 20px;
+      }
+
+      .card strong {
+        font-size: 21px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>📊 Painel de Vendas Nutribee</h1>
+  <p>Vendas, pedidos, produtos, custos e resultados</p>
+</header>
+
+<div class="container">
+
+  <div class="acoes">
+    <button class="btn-principal" onclick="carregarDadosBling()">
+      🔄 Atualizar Bling
+    </button>
+
+    <button class="btn-secundario" onclick="autorizarBling()">
+      🔐 Conectar Bling
+    </button>
+  </div>
+
+  <div id="status" class="status">
+    Aguardando conexão com o Bling...
+  </div>
+
+  <div class="cards">
+
+    <div class="card">
+      <span>Faturamento</span>
+      <strong id="faturamento">R$ 0,00</strong>
+    </div>
+
+    <div class="card">
+      <span>Pedidos</span>
+      <strong id="totalPedidos">0</strong>
+    </div>
+
+    <div class="card">
+      <span>Produtos</span>
+      <strong id="totalProdutos">0</strong>
+    </div>
+
+    <div class="card">
+      <span>Ticket médio</span>
+      <strong id="ticketMedio">R$ 0,00</strong>
+    </div>
+
+  </div>
+
+  <div class="tabela-container">
+
+    <h2>Últimos pedidos</h2>
+
+    <table>
+
+      <thead>
+        <tr>
+          <th>Pedido</th>
+          <th>Origem</th>
+          <th>Valor</th>
+        </tr>
+      </thead>
+
+      <tbody id="tabelaPedidos">
+
+        <tr>
+          <td colspan="3" class="vazio">
+            Nenhum pedido carregado.
+          </td>
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+</div>
+
 <script>
 
 async function carregarDadosBling() {
+
+  const status = document.getElementById("status");
+
+  status.classList.remove("erro");
+  status.innerText = "⏳ Buscando dados do Bling...";
 
   const accessToken =
     localStorage.getItem("bling_access_token");
 
   if (!accessToken) {
 
-    console.log("Bling ainda não conectado.");
+    status.classList.add("erro");
+
+    status.innerText =
+      "⚠️ Bling ainda não está conectado. Clique em 'Conectar Bling'.";
 
     return;
   }
 
   try {
 
-    const response = await fetch("/api/bling-dados", {
+    const resposta = await fetch("/api/bling-dados", {
+
       method: "POST",
 
       headers: {
@@ -27,104 +264,163 @@ async function carregarDadosBling() {
 
     });
 
-    const dados = await response.json();
+    const dados = await resposta.json();
 
-    if (!response.ok) {
+    if (!resposta.ok || !dados.success) {
 
-      console.error(
-        "Erro ao buscar dados do Bling:",
-        dados
+      throw new Error(
+        dados.error || "Erro ao buscar dados do Bling."
       );
 
-      return;
     }
-
-    console.log("Dados recebidos do Bling:", dados);
 
     const produtos = dados.produtos || [];
     const pedidos = dados.pedidos || [];
 
-    /*
-      PRODUTOS
-    */
+    atualizarPainel(produtos, pedidos);
 
-    const produtosSection =
-      document.querySelector(".section:nth-of-type(3)");
-
-    if (produtosSection) {
-
-      produtosSection.innerHTML = `
-        <h2>Produtos</h2>
-        <p>
-          ${produtos.length}
-          produtos carregados do Bling.
-        </p>
-      `;
-
-    }
-
-    /*
-      PEDIDOS
-    */
-
-    const tabela =
-      document.querySelector("tbody");
-
-    if (tabela && pedidos.length > 0) {
-
-      tabela.innerHTML = pedidos.map(pedido => {
-
-        const numero =
-          pedido.numero || pedido.id || "-";
-
-        const valor =
-          Number(pedido.total || 0);
-
-        return `
-          <tr>
-
-            <td>${numero}</td>
-
-            <td>Bling</td>
-
-            <td>
-              ${pedido.contato?.nome || "Pedido de venda"}
-            </td>
-
-            <td>
-              R$ ${valor.toLocaleString(
-                "pt-BR",
-                {
-                  minimumFractionDigits: 2
-                }
-              )}
-            </td>
-
-            <td>—</td>
-
-          </tr>
-        `;
-
-      }).join("");
-
-    }
+    status.innerText =
+      `✅ Dados atualizados. ${pedidos.length} pedidos encontrados.`;
 
   } catch (erro) {
 
-    console.error(
-      "Erro na integração:",
-      erro
-    );
+    console.error(erro);
+
+    status.classList.add("erro");
+
+    status.innerText =
+      "❌ Erro ao carregar dados: " + erro.message;
 
   }
 
 }
 
 
-/*
-  CARREGA AUTOMATICAMENTE
-*/
+function atualizarPainel(produtos, pedidos) {
 
-carregarDadosBling();
+  let faturamento = 0;
+
+  pedidos.forEach(pedido => {
+
+    const valor = Number(
+      pedido.total || 0
+    );
+
+    faturamento += valor;
+
+  });
+
+
+  const quantidadePedidos =
+    pedidos.length;
+
+
+  const ticketMedio =
+    quantidadePedidos > 0
+      ? faturamento / quantidadePedidos
+      : 0;
+
+
+  document.getElementById("faturamento")
+    .innerText = formatarMoeda(faturamento);
+
+
+  document.getElementById("totalPedidos")
+    .innerText = quantidadePedidos;
+
+
+  document.getElementById("totalProdutos")
+    .innerText = produtos.length;
+
+
+  document.getElementById("ticketMedio")
+    .innerText = formatarMoeda(ticketMedio);
+
+
+  const tabela =
+    document.getElementById("tabelaPedidos");
+
+
+  if (pedidos.length === 0) {
+
+    tabela.innerHTML = `
+      <tr>
+        <td colspan="3" class="vazio">
+          Nenhum pedido encontrado.
+        </td>
+      </tr>
+    `;
+
+    return;
+  }
+
+
+  tabela.innerHTML = pedidos
+    .slice(0, 50)
+    .map(pedido => {
+
+      const numero =
+        pedido.numero ||
+        pedido.id ||
+        "-";
+
+
+      const valor =
+        Number(pedido.total || 0);
+
+
+      return `
+        <tr>
+
+          <td>${numero}</td>
+
+          <td>Bling</td>
+
+          <td>${formatarMoeda(valor)}</td>
+
+        </tr>
+      `;
+
+    })
+    .join("");
+
+}
+
+
+function formatarMoeda(valor) {
+
+  return Number(valor || 0)
+    .toLocaleString("pt-BR", {
+
+      style: "currency",
+
+      currency: "BRL"
+
+    });
+
+}
+
+
+function autorizarBling() {
+
+  /*
+    IMPORTANTE:
+    Vamos configurar a URL de autorização
+    do Bling depois que confirmarmos
+    o CLIENT_ID e REDIRECT_URI.
+  */
+
+  alert(
+    "A conexão com o Bling será configurada nesta etapa."
+  );
+
+}
+
+
+// Não carregar automaticamente ainda.
+// Primeiro vamos testar a conexão.
 
 </script>
+
+</body>
+</html>   
