@@ -403,6 +403,21 @@ function formatarMoeda(valor) {
 
 function autorizarBling() {
 
+  const clientId = "1c91f534729d1b705ae2229ea4ac0c345ce37cc7";
+
+  const state = crypto.randomUUID();
+
+  localStorage.setItem("bling_oauth_state", state);
+
+  const url =
+    "https://www.bling.com.br/Api/v3/oauth/authorize" +
+    "?response_type=code" +
+    "&client_id=" + encodeURIComponent(clientId) +
+    "&state=" + encodeURIComponent(state);
+
+  window.location.href = url;
+}
+
   /*
     IMPORTANTE:
     Vamos configurar a URL de autorização
