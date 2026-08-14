@@ -16,10 +16,12 @@ export default async function handler(req, res) {
       });
     }
 
-    const headers = {
-      "Authorization": `Bearer ${access_token}`,
-      "Accept": "application/json",
-      "enable-jwt": "1"
+    headers: {
+  "Authorization": `Basic ${credentials}`,
+  "Content-Type": "application/x-www-form-urlencoded",
+  "Accept": "application/json",
+  "enable-jwt": "1"
+},
     };
 
     const [produtosResponse, pedidosResponse] = await Promise.all([
@@ -59,9 +61,3 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error("Erro ao buscar dados do Bling:", error);
 
-    return res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-}
