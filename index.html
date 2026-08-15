@@ -3,289 +3,520 @@
 
 <head>
 
-  <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0"
+>
 
-  <title>Painel de Vendas Nutribee</title>
+<title>Painel de Vendas Nutribee</title>
 
-  <style>
 
-    * {
-      box-sizing: border-box;
-    }
+<style>
 
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f5f7f6;
-      color: #222;
-    }
+* {
+  box-sizing: border-box;
+}
 
-    header {
-      background: #111;
-      color: white;
-      padding: 20px;
-    }
 
-    header h1 {
-      margin: 0;
-      font-size: 24px;
-    }
+body {
 
-    header p {
-      margin: 6px 0 0;
-      color: #ccc;
-    }
+  margin: 0;
 
-    .container {
-      padding: 20px;
-      max-width: 1400px;
-      margin: auto;
-    }
+  font-family:
+    Arial,
+    sans-serif;
 
-    .acoes {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 20px;
-    }
+  background:
+    #f5f7f6;
 
-    button {
-      border: 0;
-      border-radius: 8px;
-      padding: 12px 18px;
-      cursor: pointer;
-      font-weight: bold;
-    }
+  color:
+    #222;
 
-    .btn-principal {
-      background: #159447;
-      color: white;
-    }
+}
 
-    .btn-secundario {
-      background: #ddd;
-      color: #222;
-    }
 
-    .status {
-      background: white;
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      border-left: 5px solid #159447;
-    }
+header {
 
-    .erro {
-      border-left-color: #d93025;
-      color: #b00020;
-    }
+  background:
+    #111;
 
-    /* ==============================
-       CARDS
-    ============================== */
+  color:
+    white;
 
-    .cards {
-      display: grid;
-      grid-template-columns:
-        repeat(auto-fit, minmax(220px, 1fr));
+  padding:
+    20px;
 
-      gap: 15px;
-      margin-bottom: 25px;
-    }
+}
 
-    .card {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow:
-        0 2px 8px rgba(0,0,0,0.08);
-    }
 
-    .card span {
-      display: block;
-      color: #777;
-      font-size: 14px;
-      margin-bottom: 8px;
-    }
+header h1 {
 
-    .card strong {
-      font-size: 25px;
-    }
+  margin:
+    0;
 
-    /* ==============================
-       PERÍODOS
-    ============================== */
+  font-size:
+    24px;
 
-    .periodos-container {
-      margin-bottom: 30px;
-    }
+}
 
-    .periodos-container h2 {
-      margin-bottom: 15px;
-    }
 
-    .periodos {
-      display: grid;
+header p {
 
-      grid-template-columns:
-        repeat(auto-fit, minmax(220px, 1fr));
+  margin:
+    6px 0 0;
 
-      gap: 15px;
-    }
+  color:
+    #ccc;
 
-    .periodo-card {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
+}
 
-      box-shadow:
-        0 2px 8px rgba(0,0,0,0.08);
 
-      border-top: 5px solid #159447;
-    }
+.container {
 
-    .periodo-nome {
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 12px;
-    }
+  padding:
+    20px;
 
-    .periodo-valor {
-      font-size: 26px;
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
+  max-width:
+    1400px;
 
-    .periodo-pedidos {
-      color: #777;
-      font-size: 14px;
-    }
+  margin:
+    auto;
 
-    /* ==============================
-       MARKETPLACES
-    ============================== */
+}
 
-    .marketplaces-container {
-      margin-bottom: 30px;
-    }
 
-    .marketplaces-container h2 {
-      margin-bottom: 15px;
-    }
+.acoes {
 
-    .marketplaces {
-      display: grid;
+  display:
+    flex;
 
-      grid-template-columns:
-        repeat(auto-fit, minmax(220px, 1fr));
+  gap:
+    10px;
 
-      gap: 15px;
-    }
+  flex-wrap:
+    wrap;
 
-    .marketplace-card {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
+  margin-bottom:
+    20px;
 
-      box-shadow:
-        0 2px 8px rgba(0,0,0,0.08);
+}
 
-      border-top: 5px solid #159447;
-    }
 
-    .marketplace-nome {
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 15px;
-    }
+button {
 
-    .marketplace-faturamento {
-      font-size: 25px;
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
+  border:
+    0;
 
-    .marketplace-pedidos {
-      color: #777;
-      font-size: 14px;
-    }
+  border-radius:
+    8px;
 
-    .sem-marketplaces {
-      background: white;
-      border-radius: 12px;
-      padding: 25px;
-      color: #777;
-      text-align: center;
-    }
+  padding:
+    13px 18px;
 
-    /* ==============================
-       TABELA
-    ============================== */
+  cursor:
+    pointer;
 
-    .tabela-container {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      overflow-x: auto;
-    }
+  font-weight:
+    bold;
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 600px;
-    }
+  font-size:
+    15px;
 
-    th,
-    td {
-      padding: 12px;
-      border-bottom: 1px solid #eee;
-      text-align: left;
-    }
+}
 
-    th {
-      background: #f0f0f0;
-    }
 
-    .vazio {
-      text-align: center;
-      padding: 30px;
-      color: #777;
-    }
+.btn-principal {
 
-    /* ==============================
-       CELULAR
-    ============================== */
+  background:
+    #159447;
 
-    @media (max-width: 600px) {
+  color:
+    white;
 
-      .container {
-        padding: 12px;
-      }
+}
 
-      header h1 {
-        font-size: 20px;
-      }
 
-      .card strong {
-        font-size: 21px;
-      }
+.btn-secundario {
 
-      .periodo-valor {
-        font-size: 23px;
-      }
+  background:
+    #ddd;
 
-      .marketplace-faturamento {
-        font-size: 22px;
-      }
+  color:
+    #222;
 
-    }
+}
 
-  </style>
+
+.status {
+
+  background:
+    white;
+
+  padding:
+    14px;
+
+  border-radius:
+    10px;
+
+  margin-bottom:
+    20px;
+
+  border-left:
+    5px solid #159447;
+
+}
+
+
+.status.erro {
+
+  border-left-color:
+    #d93025;
+
+  color:
+    #b00020;
+
+}
+
+
+.cards {
+
+  display:
+    grid;
+
+  grid-template-columns:
+    repeat(
+      auto-fit,
+      minmax(220px, 1fr)
+    );
+
+  gap:
+    15px;
+
+  margin-bottom:
+    30px;
+
+}
+
+
+.card {
+
+  background:
+    white;
+
+  border-radius:
+    12px;
+
+  padding:
+    20px;
+
+  box-shadow:
+    0 2px 8px
+    rgba(0,0,0,0.08);
+
+}
+
+
+.card span {
+
+  display:
+    block;
+
+  color:
+    #777;
+
+  font-size:
+    15px;
+
+  margin-bottom:
+    8px;
+
+}
+
+
+.card strong {
+
+  font-size:
+    26px;
+
+}
+
+
+.secao {
+
+  margin-bottom:
+    30px;
+
+}
+
+
+.secao h2 {
+
+  font-size:
+    25px;
+
+  margin-bottom:
+    15px;
+
+}
+
+
+.periodos {
+
+  display:
+    grid;
+
+  grid-template-columns:
+    repeat(
+      auto-fit,
+      minmax(220px, 1fr)
+    );
+
+  gap:
+    15px;
+
+}
+
+
+.periodo {
+
+  background:
+    white;
+
+  border-radius:
+    12px;
+
+  padding:
+    20px;
+
+  border-top:
+    5px solid #159447;
+
+  box-shadow:
+    0 2px 8px
+    rgba(0,0,0,0.08);
+
+}
+
+
+.periodo-nome {
+
+  font-weight:
+    bold;
+
+  font-size:
+    18px;
+
+  margin-bottom:
+    12px;
+
+}
+
+
+.periodo-valor {
+
+  font-size:
+    25px;
+
+  font-weight:
+    bold;
+
+  margin-bottom:
+    8px;
+
+}
+
+
+.periodo-pedidos {
+
+  color:
+    #777;
+
+}
+
+
+.marketplaces {
+
+  display:
+    grid;
+
+  grid-template-columns:
+    repeat(
+      auto-fit,
+      minmax(220px, 1fr)
+    );
+
+  gap:
+    15px;
+
+}
+
+
+.marketplace {
+
+  background:
+    white;
+
+  border-radius:
+    12px;
+
+  padding:
+    20px;
+
+  border-top:
+    5px solid #159447;
+
+  box-shadow:
+    0 2px 8px
+    rgba(0,0,0,0.08);
+
+}
+
+
+.marketplace-nome {
+
+  font-size:
+    18px;
+
+  font-weight:
+    bold;
+
+  margin-bottom:
+    14px;
+
+}
+
+
+.marketplace-valor {
+
+  font-size:
+    25px;
+
+  font-weight:
+    bold;
+
+  margin-bottom:
+    8px;
+
+}
+
+
+.marketplace-pedidos {
+
+  color:
+    #777;
+
+}
+
+
+.tabela {
+
+  background:
+    white;
+
+  border-radius:
+    12px;
+
+  padding:
+    20px;
+
+  overflow-x:
+    auto;
+
+}
+
+
+table {
+
+  width:
+    100%;
+
+  border-collapse:
+    collapse;
+
+  min-width:
+    650px;
+
+}
+
+
+th,
+td {
+
+  padding:
+    12px;
+
+  border-bottom:
+    1px solid #eee;
+
+  text-align:
+    left;
+
+}
+
+
+th {
+
+  background:
+    #f0f0f0;
+
+}
+
+
+.vazio {
+
+  text-align:
+    center;
+
+  padding:
+    30px;
+
+  color:
+    #777;
+
+}
+
+
+@media (
+  max-width: 600px
+) {
+
+  .container {
+
+    padding:
+      12px;
+
+  }
+
+
+  header h1 {
+
+    font-size:
+      20px;
+
+  }
+
+
+  .card strong {
+
+    font-size:
+      22px;
+
+  }
+
+
+  .periodo-valor,
+  .marketplace-valor {
+
+    font-size:
+      22px;
+
+  }
+
+}
+
+</style>
 
 </head>
 
@@ -295,13 +526,13 @@
 
 <header>
 
-  <h1>
-    📊 Painel de Vendas Nutribee
-  </h1>
+<h1>
+  📊 Painel de Vendas Nutribee
+</h1>
 
-  <p>
-    Vendas, pedidos, produtos, custos e resultados
-  </p>
+<p>
+  Vendas, pedidos, produtos, custos e resultados
+</p>
 
 </header>
 
@@ -309,287 +540,302 @@
 <div class="container">
 
 
-  <!-- ==============================
-       BOTÕES
-  ============================== -->
+<div class="acoes">
 
-  <div class="acoes">
+<button
+  class="btn-principal"
+  onclick="carregarDadosBling(true)"
+>
+  🔄 Atualizar Bling
+</button>
 
-    <button
-      class="btn-principal"
-      onclick="carregarDadosBling()"
-    >
-      🔄 Atualizar Bling
-    </button>
 
-    <button
-      class="btn-secundario"
-      onclick="autorizarBling()"
-    >
-      🔐 Conectar Bling
-    </button>
+<button
+  class="btn-secundario"
+  onclick="autorizarBling()"
+>
+  🔐 Conectar Bling
+</button>
 
-  </div>
+</div>
 
 
-  <!-- ==============================
-       STATUS
-  ============================== -->
+<div
+  id="status"
+  class="status"
+>
+  Aguardando conexão com o Bling...
+</div>
 
-  <div
-    id="status"
-    class="status"
-  >
-    Aguardando conexão com o Bling...
-  </div>
 
+<!-- =====================================================
+     RESUMO
+===================================================== -->
 
-  <!-- ==============================
-       RESUMO DO DIA
-  ============================== -->
+<div class="cards">
 
-  <div class="cards">
 
-    <div class="card">
+<div class="card">
 
-      <span>
-        Faturamento de hoje
-      </span>
+<span>
+  Faturamento de hoje
+</span>
 
-      <strong id="faturamento">
-        R$ 0,00
-      </strong>
+<strong id="faturamento">
+  R$ 0,00
+</strong>
 
-    </div>
+</div>
 
 
-    <div class="card">
+<div class="card">
 
-      <span>
-        Pedidos de hoje
-      </span>
+<span>
+  Pedidos de hoje
+</span>
 
-      <strong id="totalPedidos">
-        0
-      </strong>
+<strong id="totalPedidos">
+  0
+</strong>
 
-    </div>
+</div>
 
 
-    <div class="card">
+<div class="card">
 
-      <span>
-        Produtos
-      </span>
+<span>
+  Produtos
+</span>
 
-      <strong id="totalProdutos">
-        0
-      </strong>
+<strong id="totalProdutos">
+  0
+</strong>
 
-    </div>
+</div>
 
 
-    <div class="card">
+<div class="card">
 
-      <span>
-        Ticket médio
-      </span>
+<span>
+  Ticket médio
+</span>
 
-      <strong id="ticketMedio">
-        R$ 0,00
-      </strong>
+<strong id="ticketMedio">
+  R$ 0,00
+</strong>
 
-    </div>
+</div>
 
-  </div>
 
+</div>
 
-  <!-- ==============================
-       VENDAS POR PERÍODO
-  ============================== -->
 
-  <div class="periodos-container">
+<!-- =====================================================
+     PERÍODOS
+===================================================== -->
 
-    <h2>
-      📅 Vendas por período
-    </h2>
+<div class="secao">
 
-    <div
-      id="periodos"
-      class="periodos"
-    >
+<h2>
+  📅 Vendas por período
+</h2>
 
-      <div class="periodo-card">
 
-        <div class="periodo-nome">
-          Ontem
-        </div>
+<div class="periodos">
 
-        <div
-          class="periodo-valor"
-          id="valorOntem"
-        >
-          R$ 0,00
-        </div>
 
-        <div
-          class="periodo-pedidos"
-          id="pedidosOntem"
-        >
-          0 pedidos
-        </div>
+<div class="periodo">
 
-      </div>
+<div class="periodo-nome">
+  Ontem
+</div>
 
+<div
+  class="periodo-valor"
+  id="valorOntem"
+>
+  R$ 0,00
+</div>
 
-      <div class="periodo-card">
+<div
+  class="periodo-pedidos"
+  id="pedidosOntem"
+>
+  0 pedidos
+</div>
 
-        <div class="periodo-nome">
-          Últimos 7 dias
-        </div>
+</div>
 
-        <div
-          class="periodo-valor"
-          id="valor7"
-        >
-          R$ 0,00
-        </div>
 
-        <div
-          class="periodo-pedidos"
-          id="pedidos7"
-        >
-          0 pedidos
-        </div>
+<div class="periodo">
 
-      </div>
+<div class="periodo-nome">
+  Últimos 7 dias
+</div>
 
+<div
+  class="periodo-valor"
+  id="valor7"
+>
+  R$ 0,00
+</div>
 
-      <div class="periodo-card">
+<div
+  class="periodo-pedidos"
+  id="pedidos7"
+>
+  0 pedidos
+</div>
 
-        <div class="periodo-nome">
-          Últimos 15 dias
-        </div>
+</div>
 
-        <div
-          class="periodo-valor"
-          id="valor15"
-        >
-          R$ 0,00
-        </div>
 
-        <div
-          class="periodo-pedidos"
-          id="pedidos15"
-        >
-          0 pedidos
-        </div>
+<div class="periodo">
 
-      </div>
+<div class="periodo-nome">
+  Últimos 15 dias
+</div>
 
+<div
+  class="periodo-valor"
+  id="valor15"
+>
+  R$ 0,00
+</div>
 
-      <div class="periodo-card">
+<div
+  class="periodo-pedidos"
+  id="pedidos15"
+>
+  0 pedidos
+</div>
 
-        <div class="periodo-nome">
-          Últimos 30 dias
-        </div>
+</div>
 
-        <div
-          class="periodo-valor"
-          id="valor30"
-        >
-          R$ 0,00
-        </div>
 
-        <div
-          class="periodo-pedidos"
-          id="pedidos30"
-        >
-          0 pedidos
-        </div>
+<div class="periodo">
 
-      </div>
+<div class="periodo-nome">
+  Últimos 30 dias
+</div>
 
-    </div>
+<div
+  class="periodo-valor"
+  id="valor30"
+>
+  R$ 0,00
+</div>
 
-  </div>
+<div
+  class="periodo-pedidos"
+  id="pedidos30"
+>
+  0 pedidos
+</div>
 
+</div>
 
-  <!-- ==============================
-       FATURAMENTO POR MARKETPLACE
-  ============================== -->
 
-  <div class="marketplaces-container">
+</div>
 
-    <h2>
-      💰 Faturamento por marketplace
-    </h2>
+</div>
 
-    <div
-      id="marketplaces"
-      class="marketplaces"
-    >
 
-      <div class="sem-marketplaces">
-        Nenhum marketplace carregado.
-      </div>
+<!-- =====================================================
+     MARKETPLACES
+===================================================== -->
 
-    </div>
+<div class="secao">
 
-  </div>
+<h2>
+  💰 Faturamento por marketplace
+</h2>
 
 
-  <!-- ==============================
-       ÚLTIMOS PEDIDOS
-  ============================== -->
+<div
+  id="marketplaces"
+  class="marketplaces"
+>
 
-  <div class="tabela-container">
+<div class="marketplace">
 
-    <h2>
-      Últimos pedidos
-    </h2>
+<div class="marketplace-nome">
+  Carregando...
+</div>
 
-    <table>
+<div class="marketplace-valor">
+  R$ 0,00
+</div>
 
-      <thead>
+<div class="marketplace-pedidos">
+  0 pedidos
+</div>
 
-        <tr>
+</div>
 
-          <th>
-            Pedido
-          </th>
+</div>
 
-          <th>
-            Origem
-          </th>
+</div>
 
-          <th>
-            Valor
-          </th>
 
-        </tr>
+<!-- =====================================================
+     ÚLTIMOS PEDIDOS
+===================================================== -->
 
-      </thead>
+<div class="tabela">
 
+<h2>
+  Últimos pedidos
+</h2>
 
-      <tbody id="tabelaPedidos">
 
-        <tr>
+<table>
 
-          <td
-            colspan="3"
-            class="vazio"
-          >
-            Nenhum pedido carregado.
-          </td>
+<thead>
 
-        </tr>
+<tr>
 
-      </tbody>
+<th>
+  Pedido
+</th>
 
-    </table>
+<th>
+  Marketplace
+</th>
 
-  </div>
+<th>
+  Data
+</th>
+
+<th>
+  Valor
+</th>
+
+</tr>
+
+</thead>
+
+
+<tbody
+  id="tabelaPedidos"
+>
+
+<tr>
+
+<td
+  colspan="4"
+  class="vazio"
+>
+  Nenhum pedido carregado.
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
 
 
 </div>
@@ -598,35 +844,69 @@
 <script>
 
 
-/* =====================================================
-   CARREGAR DADOS DO BLING
-===================================================== */
+// ========================================================
+// MOEDA
+// ========================================================
 
-async function carregarDadosBling() {
+function moeda(
+  valor
+) {
+
+  return Number(
+    valor || 0
+  ).toLocaleString(
+    "pt-BR",
+    {
+      style:
+        "currency",
+
+      currency:
+        "BRL"
+    }
+  );
+
+}
+
+
+// ========================================================
+// CARREGAR BLING
+// ========================================================
+
+async function carregarDadosBling(
+  forcar = false
+) {
 
   const status =
-    document.getElementById("status");
+    document.getElementById(
+      "status"
+    );
 
 
-  status.classList.remove("erro");
+  status.classList.remove(
+    "erro"
+  );
 
 
   status.innerText =
-    "⏳ Buscando dados do Bling...";
+    "⏳ Buscando todos os dados do Bling...";
 
 
-  const accessToken =
+  const token =
     localStorage.getItem(
       "bling_access_token"
     );
 
 
-  if (!accessToken) {
+  if (!token) {
 
-    status.classList.add("erro");
+    status.classList.add(
+      "erro"
+    );
+
 
     status.innerText =
-      "⚠️ Bling ainda não está conectado. Clique em 'Conectar Bling'.";
+      "⚠️ Bling não está conectado. Clique em Conectar Bling.";
+
 
     return;
 
@@ -640,19 +920,26 @@ async function carregarDadosBling() {
         "/api/bling-dados",
         {
 
-          method: "POST",
+          method:
+            "POST",
 
           headers: {
+
             "Content-Type":
               "application/json"
+
           },
 
-          body: JSON.stringify({
+          body:
+            JSON.stringify({
 
-            access_token:
-              accessToken
+              access_token:
+                token,
 
-          })
+              forceRefresh:
+                forcar
+
+            })
 
         }
       );
@@ -669,53 +956,47 @@ async function carregarDadosBling() {
 
       throw new Error(
         dados.error ||
-        "Erro ao buscar dados do Bling."
+        "Erro ao carregar dados."
       );
 
     }
 
 
-    const produtos =
-      dados.produtos || [];
-
-
-    const pedidos =
-      dados.pedidos || [];
-
-
-    const marketplaces =
-      dados.marketplaces || [];
-
-
-    const periodos =
-      dados.periodos || {};
-
-
-    atualizarPainel(
-      produtos,
-      pedidos
-    );
-
-
-    atualizarMarketplaces(
-      marketplaces
+    atualizarResumo(
+      dados
     );
 
 
     atualizarPeriodos(
-      periodos
+      dados.periodos
+    );
+
+
+    atualizarMarketplaces(
+      dados.marketplaces
+    );
+
+
+    atualizarPedidos(
+      dados.ultimosPedidos
     );
 
 
     status.innerText =
-      `✅ Dados atualizados. ${pedidos.length} pedidos encontrados nos últimos 30 dias.`;
+      `✅ Atualizado com sucesso. ${dados.totalPedidos} pedidos encontrados nos últimos 30 dias.`;
 
 
   } catch (erro) {
 
-    console.error(erro);
+    console.error(
+      erro
+    );
 
-    status.classList.add("erro");
+
+    status.classList.add(
+      "erro"
+    );
+
 
     status.innerText =
       "❌ Erro ao carregar dados: " +
@@ -729,87 +1010,46 @@ async function carregarDadosBling() {
 }
 
 
-/* =====================================================
-   ATUALIZAR RESUMO
-===================================================== */
+// ========================================================
+// RESUMO
+// ========================================================
 
-function atualizarPainel(
-  produtos,
-  pedidos
+function atualizarResumo(
+  dados
 ) {
 
-
-  /*
-     O backend traz os pedidos
-     dos últimos 30 dias.
-
-     Aqui filtramos somente
-     os pedidos de hoje.
-  */
-
-  const hoje =
-    new Date();
-
-
-  const hojeStr =
-    dataLocalISO(hoje);
-
-
-  const pedidosHoje =
-    pedidos.filter(
-      pedido => {
-
-        const data =
-          obterDataPedido(
-            pedido
-          );
-
-        return data === hojeStr;
-
-      }
+  const faturamento =
+    Number(
+      dados.faturamentoHoje ||
+      0
     );
 
 
-  let faturamento =
-    0;
+  const pedidos =
+    Array.isArray(
+      dados.pedidosHoje
+    )
+      ? dados.pedidosHoje.length
+      : 0;
 
 
-  pedidosHoje.forEach(
-    pedido => {
-
-      const valor =
-        Number(
-          pedido.total || 0
-        );
-
-      if (
-        Number.isFinite(valor)
-      ) {
-
-        faturamento +=
-          valor;
-
-      }
-
-    }
-  );
+  const produtos =
+    Number(
+      dados.totalProdutos ||
+      0
+    );
 
 
-  const quantidadePedidos =
-    pedidosHoje.length;
-
-
-  const ticketMedio =
-    quantidadePedidos > 0
-      ? faturamento /
-        quantidadePedidos
+  const ticket =
+    pedidos > 0
+      ? faturamento / pedidos
       : 0;
 
 
   document.getElementById(
     "faturamento"
   ).innerText =
-    formatarMoeda(
+    moeda(
       faturamento
     );
 
@@ -817,137 +1057,118 @@ function atualizarPainel(
   document.getElementById(
     "totalPedidos"
   ).innerText =
-    quantidadePedidos;
+    pedidos;
 
 
   document.getElementById(
     "totalProdutos"
   ).innerText =
-    produtos.length;
+    produtos;
 
 
   document.getElementById(
     "ticketMedio"
   ).innerText =
-    formatarMoeda(
-      ticketMedio
+    moeda(
+      ticket
     );
-
-
-  atualizarTabelaPedidos(
-    pedidos
-  );
 
 }
 
 
-/* =====================================================
-   ATUALIZAR PERÍODOS
-===================================================== */
+// ========================================================
+// PERÍODOS
+// ========================================================
 
 function atualizarPeriodos(
   periodos
 ) {
+
+  periodos =
+    periodos || {};
 
 
   const ontem =
     periodos.ontem || {};
 
 
-  const seteDias =
-    periodos.seteDias || {};
+  const sete =
+    periodos.ultimos7 || {};
 
 
-  const quinzeDias =
-    periodos.quinzeDias || {};
+  const quinze =
+    periodos.ultimos15 || {};
 
 
-  const trintaDias =
-    periodos.trintaDias || {};
+  const trinta =
+    periodos.ultimos30 || {};
 
-
-  /* ONTEM */
 
   document.getElementById(
     "valorOntem"
   ).innerText =
-    formatarMoeda(
-      ontem.total || 0
+    moeda(
+      ontem.faturamento
     );
 
 
   document.getElementById(
     "pedidosOntem"
   ).innerText =
-    formatarQuantidadePedidos(
-      ontem.pedidos || 0
-    );
+    `${ontem.pedidos || 0} pedidos`;
 
-
-  /* 7 DIAS */
 
   document.getElementById(
     "valor7"
   ).innerText =
-    formatarMoeda(
-      seteDias.total || 0
+    moeda(
+      sete.faturamento
     );
 
 
   document.getElementById(
     "pedidos7"
   ).innerText =
-    formatarQuantidadePedidos(
-      seteDias.pedidos || 0
-    );
+    `${sete.pedidos || 0} pedidos`;
 
-
-  /* 15 DIAS */
 
   document.getElementById(
     "valor15"
   ).innerText =
-    formatarMoeda(
-      quinzeDias.total || 0
+    moeda(
+      quinze.faturamento
     );
 
 
   document.getElementById(
     "pedidos15"
   ).innerText =
-    formatarQuantidadePedidos(
-      quinzeDias.pedidos || 0
-    );
+    `${quinze.pedidos || 0} pedidos`;
 
-
-  /* 30 DIAS */
 
   document.getElementById(
     "valor30"
   ).innerText =
-    formatarMoeda(
-      trintaDias.total || 0
+    moeda(
+      trinta.faturamento
     );
 
 
   document.getElementById(
     "pedidos30"
   ).innerText =
-    formatarQuantidadePedidos(
-      trintaDias.pedidos || 0
-    );
+    `${trinta.pedidos || 0} pedidos`;
 
 }
 
 
-/* =====================================================
-   MARKETPLACES
-===================================================== */
+// ========================================================
+// MARKETPLACES
+// ========================================================
 
 function atualizarMarketplaces(
-  marketplaces
+  lista
 ) {
-
 
   const container =
     document.getElementById(
@@ -956,20 +1177,30 @@ function atualizarMarketplaces(
 
 
   if (
-    !marketplaces ||
-    marketplaces.length === 0
+    !Array.isArray(lista) ||
+    lista.length === 0
   ) {
 
     container.innerHTML = `
 
-      <div class="sem-marketplaces">
+      <div class="marketplace">
 
-        Nenhum marketplace encontrado
-        nos pedidos de hoje.
+        <div class="marketplace-nome">
+          Nenhum marketplace encontrado
+        </div>
+
+        <div class="marketplace-valor">
+          R$ 0,00
+        </div>
+
+        <div class="marketplace-pedidos">
+          0 pedidos
+        </div>
 
       </div>
 
     `;
+
 
     return;
 
@@ -977,81 +1208,46 @@ function atualizarMarketplaces(
 
 
   container.innerHTML =
-    marketplaces
+    lista
       .map(
-        marketplace => {
+        item => `
 
-          const nome =
-            marketplace.nome ||
-            "Marketplace";
+          <div class="marketplace">
 
-
-          const faturamento =
-            Number(
-              marketplace.faturamento ||
-              0
-            );
-
-
-          const pedidos =
-            Number(
-              marketplace.pedidos ||
-              0
-            );
-
-
-          return `
-
-            <div class="marketplace-card">
-
-              <div class="marketplace-nome">
-
-                🛒
-                ${escaparHtml(nome)}
-
-              </div>
-
-
-              <div class="marketplace-faturamento">
-
-                ${formatarMoeda(
-                  faturamento
-                )}
-
-              </div>
-
-
-              <div class="marketplace-pedidos">
-
-                ${pedidos}
-
-                ${
-                  pedidos === 1
-                    ? "pedido"
-                    : "pedidos"
-                }
-
-              </div>
-
+            <div class="marketplace-nome">
+              🛒 ${escapeHtml(
+                item.nome ||
+                "Outros"
+              )}
             </div>
 
-          `;
+            <div class="marketplace-valor">
+              ${moeda(
+                item.faturamento
+              )}
+            </div>
 
-        }
+            <div class="marketplace-pedidos">
+              ${item.pedidos || 0}
+              pedidos
+            </div>
+
+          </div>
+
+        `
       )
       .join("");
 
 }
 
 
-/* =====================================================
-   TABELA DE PEDIDOS
-===================================================== */
+// ========================================================
+// PEDIDOS
+// ========================================================
 
-function atualizarTabelaPedidos(
+function atualizarPedidos(
   pedidos
 ) {
-
 
   const tabela =
     document.getElementById(
@@ -1060,7 +1256,7 @@ function atualizarTabelaPedidos(
 
 
   if (
-    !pedidos ||
+    !Array.isArray(pedidos) ||
     pedidos.length === 0
   ) {
 
@@ -1069,17 +1265,16 @@ function atualizarTabelaPedidos(
       <tr>
 
         <td
-          colspan="3"
+          colspan="4"
           class="vazio"
         >
-
           Nenhum pedido encontrado.
-
         </td>
 
       </tr>
 
     `;
+
 
     return;
 
@@ -1088,311 +1283,133 @@ function atualizarTabelaPedidos(
 
   tabela.innerHTML =
     pedidos
-      .slice(0, 50)
       .map(
-        pedido => {
+        pedido => `
 
-          const numero =
-            pedido.numero ||
-            pedido.id ||
-            "-";
+          <tr>
 
+            <td>
+              ${escapeHtml(
+                pedido.numero ||
+                pedido.id ||
+                "-"
+              )}
+            </td>
 
-          const valor =
-            Number(
-              pedido.total || 0
-            );
+            <td>
+              ${escapeHtml(
+                pedido.marketplace ||
+                "Outros"
+              )}
+            </td>
 
+            <td>
+              ${formatarData(
+                pedido.data
+              )}
+            </td>
 
-          const origem =
-            descobrirOrigem(
-              pedido
-            );
+            <td>
+              ${moeda(
+                pedido.total
+              )}
+            </td>
 
+          </tr>
 
-          return `
-
-            <tr>
-
-              <td>
-
-                ${escaparHtml(
-                  numero
-                )}
-
-              </td>
-
-
-              <td>
-
-                ${escaparHtml(
-                  origem
-                )}
-
-              </td>
-
-
-              <td>
-
-                ${formatarMoeda(
-                  valor
-                )}
-
-              </td>
-
-            </tr>
-
-          `;
-
-        }
+        `
       )
       .join("");
 
 }
 
 
-/* =====================================================
-   DESCOBRIR ORIGEM DO PEDIDO
-===================================================== */
+// ========================================================
+// DATA
+// ========================================================
 
-function descobrirOrigem(
-  pedido
+function formatarData(
+  data
 ) {
 
+  if (!data) {
 
-  const possiveis = [
-
-    pedido?.loja?.nome,
-
-    pedido?.loja?.descricao,
-
-    pedido?.canalVenda?.nome,
-
-    pedido?.canalVenda?.descricao,
-
-    pedido?.canal?.nome,
-
-    pedido?.canal?.descricao,
-
-    pedido?.marketplace?.nome,
-
-    pedido?.marketplace?.descricao
-
-  ];
-
-
-  for (
-    const valor of possiveis
-  ) {
-
-    if (valor) {
-
-      return valor;
-
-    }
+    return "-";
 
   }
 
 
-  return "Bling";
+  const partes =
+    String(data).split("-");
 
-}
+
+  if (
+    partes.length !== 3
+  ) {
+
+    return data;
+
+  }
 
 
-/* =====================================================
-   DATA DO PEDIDO
-===================================================== */
-
-function obterDataPedido(
-  pedido
-) {
-
-  return String(
-    pedido?.data ||
-    pedido?.dataPedido ||
-    ""
-  ).substring(
-    0,
-    10
+  return (
+    `${partes[2]}/${partes[1]}/${partes[0]}`
   );
 
 }
 
 
-/* =====================================================
-   DATA LOCAL EM YYYY-MM-DD
-===================================================== */
+// ========================================================
+// SEGURANÇA HTML
+// ========================================================
 
-function dataLocalISO(
-  data
-) {
-
-  const ano =
-    data.getFullYear();
-
-
-  const mes =
-    String(
-      data.getMonth() + 1
-    ).padStart(
-      2,
-      "0"
-    );
-
-
-  const dia =
-    String(
-      data.getDate()
-    ).padStart(
-      2,
-      "0"
-    );
-
-
-  return `${ano}-${mes}-${dia}`;
-
-}
-
-
-/* =====================================================
-   FORMATAÇÃO DE QUANTIDADE
-===================================================== */
-
-function formatarQuantidadePedidos(
-  quantidade
-) {
-
-  const numero =
-    Number(
-      quantidade || 0
-    );
-
-
-  return numero === 1
-    ? "1 pedido"
-    : `${numero} pedidos`;
-
-}
-
-
-/* =====================================================
-   FORMATAÇÃO DE MOEDA
-===================================================== */
-
-function formatarMoeda(
-  valor
-) {
-
-  return Number(
-    valor || 0
-  ).toLocaleString(
-    "pt-BR",
-    {
-
-      style: "currency",
-
-      currency: "BRL"
-
-    }
-  );
-
-}
-
-
-/* =====================================================
-   PROTEÇÃO CONTRA HTML
-===================================================== */
-
-function escaparHtml(
-  valor
+function escapeHtml(
+  texto
 ) {
 
   return String(
-    valor ?? ""
+    texto ?? ""
   )
-
-    .replaceAll(
-      "&",
-      "&amp;"
-    )
-
-    .replaceAll(
-      "<",
-      "&lt;"
-    )
-
-    .replaceAll(
-      ">",
-      "&gt;"
-    )
-
-    .replaceAll(
-      '"',
-      "&quot;"
-    )
-
-    .replaceAll(
-      "'",
-      "&#039;"
-    );
+  .replace(
+    /&/g,
+    "&amp;"
+  )
+  .replace(
+    /</g,
+    "&lt;"
+  )
+  .replace(
+    />/g,
+    "&gt;"
+  )
+  .replace(
+    /"/g,
+    "&quot;"
+  )
+  .replace(
+    /'/g,
+    "&#039;"
+  );
 
 }
 
 
-/* =====================================================
-   CONECTAR BLING
-===================================================== */
+// ========================================================
+// CONECTAR BLING
+// ========================================================
 
 function autorizarBling() {
 
-
-  const clientId =
-    "1c91f534729d1b705ae2229ea4ac0c345ce37cc7";
-
-
-  const state =
-    crypto.randomUUID();
-
-
-  localStorage.setItem(
-    "bling_oauth_state",
-    state
+  alert(
+    "A conexão do Bling já está configurada. Se o token estiver válido, use Atualizar Bling."
   );
-
-
-  const url =
-    "https://www.bling.com.br/Api/v3/oauth/authorize" +
-
-    "?response_type=code" +
-
-    "&client_id=" +
-
-    encodeURIComponent(
-      clientId
-    ) +
-
-    "&state=" +
-
-    encodeURIComponent(
-      state
-    );
-
-
-  window.location.href =
-    url;
 
 }
 
 
-/* =====================================================
-   NÃO CARREGAR AUTOMATICAMENTE
-===================================================== */
-
-// Os dados serão carregados
-// quando você clicar em:
-//
-// 🔄 Atualizar Bling
-
+// ========================================================
+// NÃO CARREGAR AUTOMATICAMENTE
+// ========================================================
 
 </script>
 
