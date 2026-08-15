@@ -1,722 +1,365 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>Painel de Vendas Nutribee</title>
-
-  <style>
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f5f7f6;
-      color: #222;
-    }
-
-    header {
-      background: #111;
-      color: white;
-      padding: 20px;
-    }
-
-    header h1 {
-      margin: 0;
-      font-size: 24px;
-    }
-
-    header p {
-      margin: 6px 0 0;
-      color: #ccc;
-    }
-
-    .container {
-      padding: 20px;
-      max-width: 1400px;
-      margin: auto;
-    }
-
-    .acoes {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 20px;
-    }
-
-    button {
-      border: 0;
-      border-radius: 8px;
-      padding: 12px 18px;
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 16px;
-    }
-
-    .btn-principal {
-      background: #159447;
-      color: white;
-    }
-
-    .btn-secundario {
-      background: #ddd;
-      color: #222;
-    }
-
-    .status {
-      background: white;
-      padding: 14px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      border-left: 5px solid #159447;
-    }
-
-    .erro {
-      border-left-color: #d93025;
-      color: #b00020;
-    }
-
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 15px;
-      margin-bottom: 30px;
-    }
-
-    .card {
-      background: white;
-      border-radius: 12px;
-      padding: 25px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
-
-    .card span {
-      display: block;
-      color: #777;
-      font-size: 16px;
-      margin-bottom: 10px;
-    }
-
-    .card strong {
-      font-size: 30px;
-    }
-
-    /* ==========================
-       MARKETPLACES
-    ========================== */
-
-    .marketplaces-container {
-      margin-bottom: 25px;
-    }
-
-    .marketplaces-container h2 {
-      margin-bottom: 18px;
-      font-size: 28px;
-    }
-
-    .marketplaces {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 15px;
-    }
-
-    .marketplace-card {
-      background: white;
-      border-radius: 12px;
-      padding: 22px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      border-top: 5px solid #159447;
-    }
-
-    .marketplace-nome {
-      font-size: 20px;
-      font-weight: bold;
-      margin-bottom: 15px;
-    }
-
-    .marketplace-faturamento {
-      font-size: 27px;
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
-
-    .marketplace-pedidos {
-      color: #777;
-      font-size: 15px;
-    }
-
-    .sem-marketplaces {
-      background: white;
-      border-radius: 12px;
-      padding: 25px;
-      color: #777;
-      text-align: center;
-    }
-
-    /* ==========================
-       TOTAL DOS MARKETPLACES
-    ========================== */
-
-    .total-marketplaces {
-      background: #159447;
-      color: white;
-      border-radius: 12px;
-      padding: 22px;
-      margin-top: 18px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.10);
-    }
-
-    .total-marketplaces span {
-      display: block;
-      font-size: 16px;
-      opacity: 0.9;
-      margin-bottom: 8px;
-    }
-
-    .total-marketplaces strong {
-      font-size: 30px;
-    }
-
-    @media (max-width: 600px) {
-
-      .container {
-        padding: 12px;
-      }
-
-      header h1 {
-        font-size: 21px;
-      }
-
-      .card {
-        padding: 20px;
-      }
-
-      .card strong {
-        font-size: 25px;
-      }
-
-      .marketplaces-container h2 {
-        font-size: 24px;
-      }
-
-      .marketplace-faturamento {
-        font-size: 24px;
-      }
-
-      .total-marketplaces strong {
-        font-size: 27px;
-      }
-
-    }
-
-  </style>
-
-</head>
-
-
-<body>
-
-<header>
-
-  <h1>📊 Painel de Vendas Nutribee</h1>
-
-  <p>
-    Vendas, pedidos, produtos, custos e resultados
-  </p>
-
-</header>
-
-
-<div class="container">
-
-
-  <!-- ==========================
-       BOTÕES
-  ========================== -->
-
-  <div class="acoes">
-
-    <button
-      class="btn-principal"
-      onclick="carregarDadosBling()"
-    >
-      🔄 Atualizar Bling
-    </button>
-
-
-    <button
-      class="btn-secundario"
-      onclick="autorizarBling()"
-    >
-      🔐 Conectar Bling
-    </button>
-
-  </div>
-
-
-  <!-- ==========================
-       STATUS
-  ========================== -->
-
-  <div
-    id="status"
-    class="status"
-  >
-    Aguardando conexão com o Bling...
-  </div>
-
-
-  <!-- ==========================
-       RESUMO
-  ========================== -->
-
-  <div class="cards">
-
-
-    <div class="card">
-
-      <span>
-        Faturamento total
-      </span>
-
-      <strong id="faturamento">
-        R$ 0,00
-      </strong>
-
-    </div>
-
-
-    <div class="card">
-
-      <span>
-        Pedidos
-      </span>
-
-      <strong id="totalPedidos">
-        0
-      </strong>
-
-    </div>
-
-
-    <div class="card">
-
-      <span>
-        Produtos
-      </span>
-
-      <strong id="totalProdutos">
-        0
-      </strong>
-
-    </div>
-
-
-    <div class="card">
-
-      <span>
-        Ticket médio
-      </span>
-
-      <strong id="ticketMedio">
-        R$ 0,00
-      </strong>
-
-    </div>
-
-
-  </div>
-
-
-  <!-- ==========================
-       FATURAMENTO POR MARKETPLACE
-  ========================== -->
-
-  <div class="marketplaces-container">
-
-    <h2>
-      💰 Faturamento por marketplace
-    </h2>
-
-
-    <div
-      id="marketplaces"
-      class="marketplaces"
-    >
-
-      <div class="sem-marketplaces">
-        Nenhum marketplace carregado.
-      </div>
-
-    </div>
-
-
-    <!-- TOTAL -->
-
-    <div class="total-marketplaces">
-
-      <span>
-        Faturamento total dos marketplaces
-      </span>
-
-      <strong id="totalMarketplaces">
-        R$ 0,00
-      </strong>
-
-    </div>
-
-  </div>
-
-
-</div>
-
-
-<script>
-
-
-/* =====================================================
-   CARREGAR DADOS DO BLING
-===================================================== */
-
-async function carregarDadosBling() {
-
-  const status =
-    document.getElementById("status");
-
-
-  status.classList.remove("erro");
-
-
-  status.innerText =
-    "⏳ Buscando dados do Bling...";
-
-
-  const accessToken =
-    localStorage.getItem(
-      "bling_access_token"
-    );
-
-
-  if (!accessToken) {
-
-    status.classList.add("erro");
-
-    status.innerText =
-      "⚠️ Bling ainda não está conectado. Clique em 'Conectar Bling'.";
-
-    return;
-
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({
+      success: false,
+      error: "Método não permitido"
+    });
   }
-
 
   try {
+    const { access_token } = req.body || {};
 
+    if (!access_token) {
+      return res.status(400).json({
+        success: false,
+        error: "Access token não informado"
+      });
+    }
 
-    const resposta =
-      await fetch(
-        "/api/bling-dados",
-        {
+    const headers = {
+      Authorization: `Bearer ${access_token}`,
+      Accept: "application/json",
+      "enable-jwt": "1"
+    };
 
-          method: "POST",
+    const esperar = (ms) =>
+      new Promise((resolve) => setTimeout(resolve, ms));
 
-          headers: {
-            "Content-Type": "application/json"
-          },
+    async function buscarBling(url, tentativa = 1) {
+      try {
+        const response = await fetch(url, {
+          method: "GET",
+          headers
+        });
 
-          body: JSON.stringify({
-            access_token: accessToken
-          })
+        const texto = await response.text();
 
+        let data = {};
+
+        try {
+          data = texto ? JSON.parse(texto) : {};
+        } catch {
+          data = {
+            error: texto || "Resposta inválida do Bling"
+          };
         }
-      );
 
+        if (response.status === 401) {
+          return {
+            ok: false,
+            status: 401,
+            data: {
+              error:
+                "Access token inválido ou expirado. Conecte o Bling novamente."
+            }
+          };
+        }
 
-    /*
-      Lê primeiro como texto.
-      Isso evita o erro:
-      Unexpected token 'A'
-    */
+        if (response.status === 429) {
+          if (tentativa >= 6) {
+            return {
+              ok: false,
+              status: 429,
+              data: {
+                error:
+                  "Limite de requisições do Bling atingido. Aguarde e tente novamente."
+              }
+            };
+          }
 
-    const texto =
-      await resposta.text();
+          const retryAfter = Number(
+            response.headers.get("Retry-After")
+          );
 
+          const espera =
+            Number.isFinite(retryAfter) && retryAfter > 0
+              ? retryAfter * 1000
+              : tentativa * 2000;
 
-    let dados;
+          await esperar(espera);
 
+          return buscarBling(url, tentativa + 1);
+        }
 
-    try {
+        if (!response.ok) {
+          return {
+            ok: false,
+            status: response.status,
+            data
+          };
+        }
 
-      dados =
-        JSON.parse(texto);
+        return {
+          ok: true,
+          status: response.status,
+          data
+        };
 
-    } catch (erroJson) {
+      } catch (error) {
 
-      console.error(
-        "Resposta recebida do servidor:",
-        texto
-      );
+        if (tentativa >= 3) {
+          return {
+            ok: false,
+            status: 502,
+            data: {
+              error:
+                `Falha de comunicação com o Bling: ${
+                  error.message || "erro desconhecido"
+                }`
+            }
+          };
+        }
 
-      throw new Error(
-        "O servidor não retornou JSON válido."
-      );
+        await esperar(tentativa * 1500);
 
+        return buscarBling(url, tentativa + 1);
+      }
     }
 
+    const hoje = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Sao_Paulo",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).format(new Date());
 
-    if (
-      !resposta.ok ||
-      !dados.success
-    ) {
+    const todosPedidos = [];
 
-      throw new Error(
-        dados.error ||
-        "Erro ao buscar dados do Bling."
-      );
+    let pagina = 1;
 
+    const limite = 100;
+
+    while (pagina <= 10) {
+
+      const url =
+        "https://api.bling.com.br/Api/v3/pedidos/vendas" +
+        `?pagina=${pagina}` +
+        `&limite=${limite}` +
+        `&dataInicial=${hoje}` +
+        `&dataFinal=${hoje}`;
+
+      const resposta = await buscarBling(url);
+
+      if (!resposta.ok) {
+        return res.status(resposta.status).json({
+          success: false,
+          error: resposta.data,
+          pagina
+        });
+      }
+
+      const pedidos =
+        Array.isArray(resposta.data?.data)
+          ? resposta.data.data
+          : [];
+
+      todosPedidos.push(...pedidos);
+
+      if (pedidos.length < limite) {
+        break;
+      }
+
+      pagina++;
+
+      await esperar(500);
     }
 
+    const respostaProdutos = await buscarBling(
+      "https://api.bling.com.br/Api/v3/produtos?pagina=1&limite=100"
+    );
+
+    if (!respostaProdutos.ok) {
+      return res.status(respostaProdutos.status).json({
+        success: false,
+        error: respostaProdutos.data
+      });
+    }
 
     const produtos =
-      Array.isArray(dados.produtos)
-        ? dados.produtos
+      Array.isArray(respostaProdutos.data?.data)
+        ? respostaProdutos.data.data
         : [];
 
+    // ==========================================
+    // MARKETPLACES DA NUTRIBEE
+    // ==========================================
 
-    const pedidos =
-      Array.isArray(dados.pedidos)
-        ? dados.pedidos
-        : [];
+    const mapaMarketplaces = {
 
+      "204824338": "Mercado Livre",
 
-    const marketplaces =
-      Array.isArray(dados.marketplaces)
-        ? dados.marketplaces
-        : [];
+      "205972730": "Shopee",
 
+      "205413635": "TikTok Shop",
 
-    atualizarPainel(
-      produtos,
-      pedidos
-    );
+      "205227624": "Amazon"
 
+    };
 
-    atualizarMarketplaces(
-      marketplaces
-    );
+    function descobrirMarketplace(pedido) {
 
+      const possiveisIds = [
 
-    status.innerText =
-      `✅ Dados atualizados. ${pedidos.length} pedidos encontrados.`;
+        pedido?.loja?.id,
 
+        pedido?.canalVenda?.id,
 
-  } catch (erro) {
+        pedido?.canal?.id,
 
-    console.error(erro);
+        pedido?.marketplace?.id
 
-    status.classList.add("erro");
+      ];
 
-    status.innerText =
-      "❌ Erro ao carregar dados: " +
-      erro.message;
+      for (const id of possiveisIds) {
 
-  }
+        const nome =
+          mapaMarketplaces[String(id)];
 
-}
+        if (nome) {
+          return nome;
+        }
+      }
 
+      const textos = [
 
-/* =====================================================
-   ATUALIZAR RESUMO
-===================================================== */
+        pedido?.loja?.nome,
 
-function atualizarPainel(
-  produtos,
-  pedidos
-) {
+        pedido?.loja?.descricao,
 
-  let faturamento = 0;
+        pedido?.canalVenda?.nome,
 
+        pedido?.canalVenda?.descricao,
 
-  pedidos.forEach(
-    pedido => {
+        pedido?.canal?.nome,
+
+        pedido?.canal?.descricao,
+
+        pedido?.marketplace?.nome,
+
+        pedido?.marketplace?.descricao,
+
+        pedido?.numeroLoja
+
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      if (
+        textos.includes("mercado livre") ||
+        textos.includes("mercadolivre") ||
+        textos.includes("meli")
+      ) {
+        return "Mercado Livre";
+      }
+
+      if (textos.includes("shopee")) {
+        return "Shopee";
+      }
+
+      if (textos.includes("tiktok")) {
+        return "TikTok Shop";
+      }
+
+      if (textos.includes("amazon")) {
+        return "Amazon";
+      }
+
+      return "Outros";
+    }
+
+    // ==========================================
+    // SOMAR FATURAMENTO
+    // ==========================================
+
+    const totais = {};
+
+    for (const pedido of todosPedidos) {
+
+      const nome =
+        descobrirMarketplace(pedido);
 
       const valor =
-        Number(
-          pedido.total || 0
-        );
+        Number(pedido?.total || 0);
 
+      if (!totais[nome]) {
 
-      faturamento += valor;
+        totais[nome] = {
 
+          nome,
+
+          faturamento: 0,
+
+          pedidos: 0
+
+        };
+      }
+
+      totais[nome].faturamento +=
+        Number.isFinite(valor)
+          ? valor
+          : 0;
+
+      totais[nome].pedidos++;
     }
-  );
 
+    const ordem = [
 
-  const quantidadePedidos =
-    pedidos.length;
+      "Mercado Livre",
 
+      "Shopee",
 
-  const ticketMedio =
-    quantidadePedidos > 0
-      ? faturamento / quantidadePedidos
-      : 0;
+      "TikTok Shop",
 
+      "Amazon",
 
-  document.getElementById(
-    "faturamento"
-  ).innerText =
-    formatarMoeda(
-      faturamento
-    );
+      "Outros"
 
+    ];
 
-  document.getElementById(
-    "totalPedidos"
-  ).innerText =
-    quantidadePedidos;
+    const marketplaces =
+      ordem
+        .filter((nome) => totais[nome])
+        .map((nome) => totais[nome]);
 
+    // ==========================================
+    // RETORNO
+    // ==========================================
 
-  document.getElementById(
-    "totalProdutos"
-  ).innerText =
-    produtos.length;
+    return res.status(200).json({
 
+      success: true,
 
-  document.getElementById(
-    "ticketMedio"
-  ).innerText =
-    formatarMoeda(
-      ticketMedio
-    );
+      data: todosPedidos,
 
+      pedidos: todosPedidos,
+
+      produtos,
+
+      marketplaces,
+
+      totalMarketplaces:
+        marketplaces.reduce(
+          (soma, item) =>
+            soma + item.faturamento,
+          0
+        )
+
+    });
+
+  } catch (error) {
+
+    console.error(error);
+
+    return res.status(500).json({
+
+      success: false,
+
+      error:
+        error.message ||
+        "Erro interno do servidor"
+
+    });
+
+  }
 }
-
-
-/* =====================================================
-   NOMES DOS MARKETPLACES
-===================================================== */
-
-function nomeMarketplace(
-  marketplace
-) {
-
-  const nomeOriginal =
-    String(
-      marketplace.nome || ""
-    ).trim();
-
-
-  const id =
-    String(
-      marketplace.id ||
-      marketplace.canal_id ||
-      marketplace.codigo ||
-      ""
-    ).trim();
-
-
-  const texto =
-    (
-      nomeOriginal +
-      " " +
-      id
-    ).toLowerCase();
-
-
-  /*
-    Se o Bling já mandar o nome,
-    mantém o nome.
-  */
-
-  if (
-    texto.includes("mercado livre") ||
-    texto.includes("mercadolivre")
-  ) {
-
-    return "Mercado Livre";
-
-  }
-
-
-  if (
-    texto.includes("shopee")
-  ) {
-
-    return "Shopee";
-
-  }
-
-
-  if (
-    texto.includes("tiktok")
-  ) {
-
-    return "TikTok Shop";
-
-  }
-
-
-  if (
-    texto.includes("amazon")
-  ) {
-
-    return "Amazon";
-
-  }
-
-
-  /*
-    IDs dos canais da Nutribee
-  */
-
-  if (id === "204824338") {
-
-    return "Mercado Livre";
-
-  }
-
-
-  if (id === "205972730") {
-
-    return "Shopee";
-
-  }
-
-
-  if (id === "205413635") {
-
-    return "TikTok Shop";
-
-  }
-
-
-  if (id === "205227624") {
-
-    return "Amazon";
-
-  }
-
-
-  return (
-    nomeOriginal ||
-    "Marketplace"
-  );
-
-}
-
-
-/* =====================================================
-   FATURAMENTO POR MARKETPLACE
-===================================================== */
-
-function atualizarMarketplaces(
-  marketplaces
-) {
-
-  const container =
-    document.getElementById(
-      "market
