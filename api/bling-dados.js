@@ -24,8 +24,9 @@ export default async function handler(req, res) {
       "enable-jwt": "1"
     };
 
+
     // =====================================================
-    // FUNÇÃO DE ESPERA
+    // ESPERA
     // =====================================================
 
     const esperar = (ms) =>
@@ -33,7 +34,7 @@ export default async function handler(req, res) {
 
 
     // =====================================================
-    // FUNÇÃO SEGURA PARA CONSULTAR O BLING
+    // CONSULTA SEGURA AO BLING
     // =====================================================
 
     async function buscarBling(url, tentativa = 1) {
@@ -59,7 +60,7 @@ export default async function handler(req, res) {
 
 
         // =================================================
-        // TOKEN EXPIRADO
+        // TOKEN
         // =================================================
 
         if (response.status === 401) {
@@ -82,7 +83,7 @@ export default async function handler(req, res) {
 
         if (response.status === 429) {
 
-          if (tentativa >= 5) {
+          if (tentativa >= 6) {
 
             return {
               ok: false,
@@ -158,7 +159,7 @@ export default async function handler(req, res) {
 
 
     // =====================================================
-    // DATA ATUAL - HORÁRIO DO BRASIL
+    // DATA ATUAL
     // =====================================================
 
     const hoje = new Intl.DateTimeFormat("en-CA", {
@@ -215,7 +216,6 @@ export default async function handler(req, res) {
       todosPedidos.push(...pedidos);
 
 
-      // Se veio menos que 100, terminou
       if (pedidos.length < limitePedidos) {
         break;
       }
@@ -223,8 +223,6 @@ export default async function handler(req, res) {
 
       pagina++;
 
-
-      // Evita excesso de requisições
       await esperar(700);
 
     }
@@ -262,7 +260,7 @@ export default async function handler(req, res) {
 
 
     // =====================================================
-    // IDENTIFICAR OS MARKETPLACES
+    // IDENTIFICAR AS LOJAS
     // =====================================================
 
     const idsLojas = [
@@ -278,20 +276,274 @@ export default async function handler(req, res) {
 
 
     // =====================================================
-    // BUSCAR NOME DOS CANAIS
+    // IDENTIFICAR CANAIS DE VENDA
     // =====================================================
 
     const canais = {};
 
 
-    for (const lojaId of idsLojas) {
+    // -----------------------------------------------------
+    // PRIMEIRO: tenta usar canalVenda que já veio no pedido
+    // -----------------------------------------------------
+
+    for (const pedido of todosPedidos) {
+
+      const canal =
+        pedido?.canalVenda ||
+        pedido?.canal ||
+        pedido?.marketplace;
+
+      if (canal?.id) {
+
+        const idCanal = String(canal.id);
+
+        if (!canais[idCanal]) {
+
+          canais[idCanal] = {
+            id: idCanal,
+
+            nome:
+              canal.nome ||
+              canal.descricao ||
+              canal.nomeCanal ||
+              canal.nomeIntegracao ||
+              null
+          };
+
+        }
+
+      }
+
+    }
+
+
+    // =====================================================
+    // SEGUNDO: CONSULTA A LISTA DE CANAIS DO BLING
+    // =====================================================
+
+    await esperar(700);
+
+
+    const respostaCanais =
+      await buscarBling(
+        "https://api.bling.com.br/Api/v3/canais-venda?pagina=1&limite=100"
+      );
+
+
+    if (respostaCanais.ok) {
+
+      const listaCanais =
+        Array.isArray(respostaCanais.data?.data)
+          ? respostaCanais.data.data
+          : [];
+
+
+      for (const canal of listaCanais) {
+
+        if (!canal?.id) {
+          continue;
+        }
+
+
+        const idCanal = String(canal.id);
+
+
+        const nome =
+          canal.nome ||
+          canal.descricao ||
+          canal.nomeCanal ||
+          canal.nomeIntegracao ||
+          canal.integracao?.nome ||
+          null;
+
+
+        if (!canais[idCanal]) {
+
+          canais[idCanal] = {
+            id: idCanal,
+            nome
+          };
+
+        } else if (!canais[idCanal].nome && nome) {
+
+          canais[idCanal].nome = nome;
+
+        }
+
+      }
+
+    }
+
+
+    // =====================================================
+    // TERCEIRO: BUSCAR DETALHES DE ALGUNS PEDIDOS
+    //
+    // Isso é importante porque o pedido resumido pode trazer
+    // apenas loja.id.
+    // =====================================================
+
+    const lojasComPedido = {};
+
+    for (const pedido of todosPedidos) {
+
+      const lojaId = pedido?.loja?.id;
+
+      if (
+        lojaId !== undefined &&
+        lojaId !== null &&
+        !lojasComPedido[String(lojaId)]
+      ) {
+
+        lojasComPedido[String(lojaId)] = pedido;
+
+      }
+
+    }
+
+
+    const detalhesPorLoja = {};
+
+
+    for (const lojaId of Object.keys(lojasComPedido)) {
+
+      const pedido = lojasComPedido[lojaId];
+
+      if (!pedido?.id) {
+        continue;
+      }
+
 
       await esperar(700);
 
 
-      const respostaCanal = await buscarBling(
-        `https://api.bling.com.br/Api/v3/canais-venda/${encodeURIComponent(lojaId)}`
-      );
+      const respostaDetalhe =
+        await buscarBling(
+          `https://api.bling.com.br/Api/v3/pedidos/vendas/${encodeURIComponent(pedido.id)}`
+        );
+
+
+      if (!respostaDetalhe.ok) {
+        continue;
+      }
+
+
+      const detalhe =
+        respostaDetalhe.data?.data || {};
+
+
+      detalhesPorLoja[lojaId] = detalhe;
+
+
+      // -----------------------------------------------
+      // Procura canalVenda no pedido detalhado
+      // -----------------------------------------------
+
+      const canal =
+        detalhe?.canalVenda ||
+        detalhe?.canal ||
+        detalhe?.marketplace;
+
+
+      if (canal?.id) {
+
+        const idCanal =
+          String(canal.id);
+
+
+        const nome =
+          canal.nome ||
+          canal.descricao ||
+          canal.nomeCanal ||
+          canal.nomeIntegracao ||
+          canal.integracao?.nome ||
+          null;
+
+
+        canais[idCanal] = {
+
+          id: idCanal,
+
+          nome:
+            nome ||
+            canais[idCanal]?.nome ||
+            null
+
+        };
+
+      }
+
+
+      // -----------------------------------------------
+      // Caso o próprio detalhe tenha nome da loja
+      // -----------------------------------------------
+
+      if (detalhe?.loja?.id) {
+
+        const idLoja =
+          String(detalhe.loja.id);
+
+
+        const nomeLoja =
+          detalhe.loja.nome ||
+          detalhe.loja.descricao ||
+          null;
+
+
+        if (nomeLoja) {
+
+          if (!canais[`loja_${idLoja}`]) {
+
+            canais[`loja_${idLoja}`] = {
+
+              id: idLoja,
+
+              nome: nomeLoja
+
+            };
+
+          }
+
+        }
+
+      }
+
+    }
+
+
+    // =====================================================
+    // QUARTO: CONSULTAR CANAL INDIVIDUAL
+    // =====================================================
+
+    const idsCanaisParaConsultar = [
+      ...new Set(
+
+        todosPedidos
+          .map(pedido =>
+            pedido?.canalVenda?.id ||
+            pedido?.canal?.id ||
+            pedido?.marketplace?.id
+          )
+          .filter(id => id !== undefined && id !== null)
+          .map(id => String(id))
+
+      )
+    ];
+
+
+    for (const idCanal of idsCanaisParaConsultar) {
+
+      if (canais[idCanal]?.nome) {
+        continue;
+      }
+
+
+      await esperar(700);
+
+
+      const respostaCanal =
+        await buscarBling(
+          `https://api.bling.com.br/Api/v3/canais-venda/${encodeURIComponent(idCanal)}`
+        );
 
 
       if (respostaCanal.ok) {
@@ -300,30 +552,228 @@ export default async function handler(req, res) {
           respostaCanal.data?.data || {};
 
 
-        canais[lojaId] = {
+        canais[idCanal] = {
 
-          id: lojaId,
+          id: idCanal,
 
           nome:
             canal.nome ||
             canal.descricao ||
             canal.nomeCanal ||
             canal.nomeIntegracao ||
-            `Canal ${lojaId}`
-
-        };
-
-      } else {
-
-        canais[lojaId] = {
-
-          id: lojaId,
-
-          nome: `Canal ${lojaId}`
+            canal.integracao?.nome ||
+            `Canal ${idCanal}`
 
         };
 
       }
+
+    }
+
+
+    // =====================================================
+    // FUNÇÃO PARA DESCOBRIR O NOME DO MARKETPLACE
+    // =====================================================
+
+    function descobrirMarketplace(pedido) {
+
+      // -----------------------------------------------
+      // 1. Canal de venda direto
+      // -----------------------------------------------
+
+      const canal =
+        pedido?.canalVenda ||
+        pedido?.canal ||
+        pedido?.marketplace;
+
+
+      if (canal) {
+
+        const nomeCanal =
+          canal.nome ||
+          canal.descricao ||
+          canal.nomeCanal ||
+          canal.nomeIntegracao ||
+          canal.integracao?.nome;
+
+
+        if (nomeCanal) {
+          return nomeCanal;
+        }
+
+
+        if (canal.id) {
+
+          const idCanal =
+            String(canal.id);
+
+
+          if (canais[idCanal]?.nome) {
+            return canais[idCanal].nome;
+          }
+
+        }
+
+      }
+
+
+      // -----------------------------------------------
+      // 2. Loja
+      // -----------------------------------------------
+
+      const loja =
+        pedido?.loja;
+
+
+      if (loja) {
+
+        const nomeLoja =
+          loja.nome ||
+          loja.descricao ||
+          loja.nomeLoja ||
+          loja.integracao?.nome;
+
+
+        if (nomeLoja) {
+          return nomeLoja;
+        }
+
+
+        if (loja.id) {
+
+          const idLoja =
+            String(loja.id);
+
+
+          if (canais[`loja_${idLoja}`]?.nome) {
+
+            return canais[`loja_${idLoja}`].nome;
+
+          }
+
+        }
+
+      }
+
+
+      // -----------------------------------------------
+      // 3. Número da loja / integração
+      // -----------------------------------------------
+
+      if (pedido?.numeroLoja) {
+
+        const numero =
+          String(pedido.numeroLoja).toLowerCase();
+
+
+        if (
+          numero.includes("mercado") ||
+          numero.includes("mercadolivre") ||
+          numero.includes("mercado livre") ||
+          numero.includes("meli")
+        ) {
+          return "Mercado Livre";
+        }
+
+
+        if (
+          numero.includes("tiktok") ||
+          numero.includes("tik tok")
+        ) {
+          return "TikTok Shop";
+        }
+
+
+        if (
+          numero.includes("shopee")
+        ) {
+          return "Shopee";
+        }
+
+
+        if (
+          numero.includes("amazon")
+        ) {
+          return "Amazon";
+        }
+
+      }
+
+
+      // -----------------------------------------------
+      // 4. Detalhe salvo por loja
+      // -----------------------------------------------
+
+      const lojaId =
+        pedido?.loja?.id;
+
+
+      if (
+        lojaId !== undefined &&
+        lojaId !== null
+      ) {
+
+        const detalhe =
+          detalhesPorLoja[String(lojaId)];
+
+
+        if (detalhe) {
+
+          const canalDetalhe =
+            detalhe?.canalVenda ||
+            detalhe?.canal ||
+            detalhe?.marketplace;
+
+
+          if (canalDetalhe) {
+
+            const nome =
+              canalDetalhe.nome ||
+              canalDetalhe.descricao ||
+              canalDetalhe.nomeCanal ||
+              canalDetalhe.nomeIntegracao ||
+              canalDetalhe.integracao?.nome;
+
+
+            if (nome) {
+              return nome;
+            }
+
+
+            if (canalDetalhe.id) {
+
+              const id =
+                String(canalDetalhe.id);
+
+
+              if (canais[id]?.nome) {
+                return canais[id].nome;
+              }
+
+            }
+
+          }
+
+        }
+
+      }
+
+
+      // -----------------------------------------------
+      // 5. Último recurso
+      // -----------------------------------------------
+
+      if (
+        lojaId !== undefined &&
+        lojaId !== null
+      ) {
+
+        return `Canal ${lojaId}`;
+
+      }
+
+
+      return "Sem marketplace";
 
     }
 
@@ -337,28 +787,23 @@ export default async function handler(req, res) {
 
     for (const pedido of todosPedidos) {
 
-      const lojaId =
-        pedido?.loja?.id !== undefined &&
-        pedido?.loja?.id !== null
-          ? String(pedido.loja.id)
-          : "sem_loja";
-
-
       const nomeMarketplace =
-        canais[lojaId]?.nome ||
-        pedido?.loja?.nome ||
-        `Canal ${lojaId}`;
+        descobrirMarketplace(pedido);
 
 
       const valor =
         Number(pedido?.total) || 0;
 
 
-      if (!faturamentoPorMarketplace[lojaId]) {
+      const chave =
+        nomeMarketplace.trim().toLowerCase();
 
-        faturamentoPorMarketplace[lojaId] = {
 
-          id: lojaId,
+      if (!faturamentoPorMarketplace[chave]) {
+
+        faturamentoPorMarketplace[chave] = {
+
+          id: chave,
 
           nome: nomeMarketplace,
 
@@ -371,24 +816,24 @@ export default async function handler(req, res) {
       }
 
 
-      faturamentoPorMarketplace[lojaId].faturamento += valor;
+      faturamentoPorMarketplace[chave].faturamento += valor;
 
-      faturamentoPorMarketplace[lojaId].pedidos += 1;
+      faturamentoPorMarketplace[chave].pedidos += 1;
 
     }
 
 
     // =====================================================
-    // CONVERTER PARA ARRAY
+    // CONVERTER MARKETPLACES PARA ARRAY
     // =====================================================
 
     const marketplaces =
       Object.values(faturamentoPorMarketplace);
 
 
-    // Ordena pelo maior faturamento
     marketplaces.sort(
-      (a, b) => b.faturamento - a.faturamento
+      (a, b) =>
+        b.faturamento - a.faturamento
     );
 
 
@@ -399,7 +844,8 @@ export default async function handler(req, res) {
     const faturamentoTotal =
       todosPedidos.reduce(
         (total, pedido) =>
-          total + (Number(pedido?.total) || 0),
+          total +
+          (Number(pedido?.total) || 0),
         0
       );
 
@@ -410,7 +856,8 @@ export default async function handler(req, res) {
 
     const ticketMedio =
       todosPedidos.length > 0
-        ? faturamentoTotal / todosPedidos.length
+        ? faturamentoTotal /
+          todosPedidos.length
         : 0;
 
 
@@ -424,17 +871,21 @@ export default async function handler(req, res) {
 
       data: hoje,
 
-      totalPedidos: todosPedidos.length,
+      totalPedidos:
+        todosPedidos.length,
 
-      totalProdutos: produtos.length,
+      totalProdutos:
+        produtos.length,
 
       faturamentoTotal,
 
       ticketMedio,
 
-      paginasPedidos: pagina,
+      paginasPedidos:
+        pagina,
 
-      pedidos: todosPedidos,
+      pedidos:
+        todosPedidos,
 
       produtos,
 
