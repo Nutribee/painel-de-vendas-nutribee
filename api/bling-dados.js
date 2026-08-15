@@ -25,31 +25,30 @@ export default async function handler(req, res) {
       Accept: "application/json"
     };
 
-    // Mantém no máximo aproximadamente 2 requisições por segundo.
-    // Isso evita o erro 429 do Bling.
-    const INTERVALO_MINIMO = 550;
+    /*
+      O Bling possui limite de requisições.
+      Usamos um pequeno intervalo entre chamadas
+      para evitar HTTP 429.
+    */
+    const INTERVALO = 700;
 
     let ultimaRequisicao = 0;
 
     function esperar(ms) {
-      return new Promise(resolve =>
-        setTimeout(resolve, ms)
-      );
+      return new Promise(resolve => {
+        setTimeout(resolve, ms);
+      });
     }
 
     async function controlarRequisicao() {
       const agora = Date.now();
 
-      const tempoDesdeUltima =
+      const decorrido =
         agora - ultimaRequisicao;
 
-      if (
-        tempoDesdeUltima <
-        INTERVALO_MINIMO
-      ) {
+      if (decorrido < INTERVALO) {
         await esperar(
-          INTERVALO_MINIMO -
-          tempoDesdeUltima
+          INTERVALO - decorrido
         );
       }
 
@@ -89,9 +88,9 @@ export default async function handler(req, res) {
           };
         }
 
-        // ===============================================
+        // =================================================
         // TOKEN EXPIRADO
-        // ===============================================
+        // =================================================
 
         if (response.status === 401) {
           return {
@@ -104,13 +103,13 @@ export default async function handler(req, res) {
           };
         }
 
-        // ===============================================
-        // LIMITE 429
-        // ===============================================
+        // =================================================
+        // LIMITE DE REQUISIÇÕES
+        // =================================================
 
         if (response.status === 429) {
 
-          if (tentativa >= 5) {
+          if (tentativa >= 3) {
             return {
               ok: false,
               status: 429,
@@ -128,20 +127,11 @@ export default async function handler(req, res) {
               )
             );
 
-          let tempoEspera;
-
-          if (
-            Number.isFinite(
-              retryAfter
-            ) &&
+          const tempoEspera =
+            Number.isFinite(retryAfter) &&
             retryAfter > 0
-          ) {
-            tempoEspera =
-              retryAfter * 1000;
-          } else {
-            tempoEspera =
-              2000 * tentativa;
-          }
+              ? retryAfter * 1000
+              : 3000 * tentativa;
 
           await esperar(
             tempoEspera
@@ -153,9 +143,9 @@ export default async function handler(req, res) {
           );
         }
 
-        // ===============================================
+        // =================================================
         // OUTROS ERROS
-        // ===============================================
+        // =================================================
 
         if (!response.ok) {
           return {
@@ -173,7 +163,7 @@ export default async function handler(req, res) {
 
       } catch (error) {
 
-        if (tentativa >= 3) {
+        if (tentativa >= 2) {
           return {
             ok: false,
             status: 502,
@@ -188,7 +178,7 @@ export default async function handler(req, res) {
         }
 
         await esperar(
-          1500 * tentativa
+          2000 * tentativa
         );
 
         return buscarBling(
@@ -206,6 +196,7 @@ export default async function handler(req, res) {
       data,
       status
     ) {
+
       if (
         typeof data === "string"
       ) {
@@ -231,8 +222,7 @@ export default async function handler(req, res) {
       }
 
       if (
-        typeof data?.error ===
-        "string"
+        typeof data?.error === "string"
       ) {
         return data.error;
       }
@@ -270,6 +260,10 @@ export default async function handler(req, res) {
     const hojeStr =
       dataFormatada(hoje);
 
+    // -----------------------------------------------------
+    // ONTEM
+    // -----------------------------------------------------
+
     const ontem =
       new Date(hoje);
 
@@ -280,12 +274,23 @@ export default async function handler(req, res) {
     const ontemStr =
       dataFormatada(ontem);
 
+    // -----------------------------------------------------
+    // 7 DIAS
+    // -----------------------------------------------------
+
     const inicio7 =
       new Date(hoje);
 
     inicio7.setDate(
       inicio7.getDate() - 6
     );
+
+    const inicio7Str =
+      dataFormatada(inicio7);
+
+    // -----------------------------------------------------
+    // 15 DIAS
+    // -----------------------------------------------------
 
     const inicio15 =
       new Date(hoje);
@@ -294,18 +299,19 @@ export default async function handler(req, res) {
       inicio15.getDate() - 14
     );
 
+    const inicio15Str =
+      dataFormatada(inicio15);
+
+    // -----------------------------------------------------
+    // 30 DIAS
+    // -----------------------------------------------------
+
     const inicio30 =
       new Date(hoje);
 
     inicio30.setDate(
       inicio30.getDate() - 29
     );
-
-    const inicio7Str =
-      dataFormatada(inicio7);
-
-    const inicio15Str =
-      dataFormatada(inicio15);
 
     const inicio30Str =
       dataFormatada(inicio30);
@@ -320,9 +326,19 @@ export default async function handler(req, res) {
 
     let pagina = 1;
 
-    // Até 100 páginas = 10.000 pedidos.
-    // A busca para antes quando não houver mais páginas.
-    while (pagina <= 100) {
+    /*
+      Importante:
+
+      O Bling permite paginação.
+      Buscamos 100 pedidos por chamada.
+
+      O limite de 50 páginas evita que uma conta
+      com muitos pedidos faça centenas de chamadas.
+    */
+
+    const MAX_PAGINAS = 50;
+
+    while (pagina <= MAX_PAGINAS) {
 
       const url =
         "https://api.bling.com.br/Api/v3/pedidos/vendas" +
@@ -335,6 +351,7 @@ export default async function handler(req, res) {
         await buscarBling(url);
 
       if (!resposta.ok) {
+
         return res.status(
           resposta.status
         ).json({
@@ -359,8 +376,10 @@ export default async function handler(req, res) {
         ...pedidos
       );
 
-      // Se veio menos de 100,
-      // chegamos ao final.
+      // -----------------------------------------------
+      // NÃO EXISTEM MAIS PEDIDOS
+      // -----------------------------------------------
+
       if (
         pedidos.length < limite
       ) {
@@ -368,28 +387,6 @@ export default async function handler(req, res) {
       }
 
       pagina++;
-    }
-
-    // =====================================================
-    // PRODUTOS
-    // =====================================================
-
-    let produtos = [];
-
-    const respostaProdutos =
-      await buscarBling(
-        "https://api.bling.com.br/Api/v3/produtos?pagina=1&limite=100"
-      );
-
-    if (
-      respostaProdutos.ok
-    ) {
-      produtos =
-        Array.isArray(
-          respostaProdutos.data?.data
-        )
-          ? respostaProdutos.data.data
-          : [];
     }
 
     // =====================================================
@@ -409,7 +406,6 @@ export default async function handler(req, res) {
 
       "205227624":
         "Amazon"
-
     };
 
     function descobrirMarketplace(
@@ -433,7 +429,6 @@ export default async function handler(req, res) {
         pedido?.canalId,
 
         pedido?.marketplaceId
-
       ];
 
       for (
@@ -449,6 +444,10 @@ export default async function handler(req, res) {
           return nome;
         }
       }
+
+      // -----------------------------------------------
+      // TENTATIVA PELO NOME
+      // -----------------------------------------------
 
       const textos = [
 
@@ -490,25 +489,19 @@ export default async function handler(req, res) {
       }
 
       if (
-        textos.includes(
-          "shopee"
-        )
+        textos.includes("shopee")
       ) {
         return "Shopee";
       }
 
       if (
-        textos.includes(
-          "tiktok"
-        )
+        textos.includes("tiktok")
       ) {
         return "TikTok Shop";
       }
 
       if (
-        textos.includes(
-          "amazon"
-        )
+        textos.includes("amazon")
       ) {
         return "Amazon";
       }
@@ -556,7 +549,6 @@ export default async function handler(req, res) {
         pedido?.valorTotal,
 
         pedido?.totalProdutos
-
       ];
 
       for (
@@ -567,9 +559,7 @@ export default async function handler(req, res) {
           Number(valor);
 
         if (
-          Number.isFinite(
-            numero
-          )
+          Number.isFinite(numero)
         ) {
           return numero;
         }
@@ -593,7 +583,6 @@ export default async function handler(req, res) {
         pedidos: 0,
 
         marketplaces: {}
-
       };
 
       for (
@@ -610,10 +599,8 @@ export default async function handler(req, res) {
         }
 
         if (
-          dataPedido <
-            dataInicial ||
-          dataPedido >
-            hojeStr
+          dataPedido < dataInicial ||
+          dataPedido > hojeStr
         ) {
           continue;
         }
@@ -648,9 +635,7 @@ export default async function handler(req, res) {
             faturamento: 0,
 
             pedidos: 0
-
           };
-
         }
 
         resultado.marketplaces[
@@ -661,7 +646,6 @@ export default async function handler(req, res) {
         resultado.marketplaces[
           nome
         ].pedidos++;
-
       }
 
       return resultado;
@@ -742,9 +726,7 @@ export default async function handler(req, res) {
           faturamento: 0,
 
           pedidos: 0
-
         };
-
       }
 
       totaisHoje[
@@ -755,7 +737,6 @@ export default async function handler(req, res) {
       totaisHoje[
         nome
       ].pedidos++;
-
     }
 
     // =====================================================
@@ -773,7 +754,6 @@ export default async function handler(req, res) {
       "Amazon",
 
       "Outros"
-
     ];
 
     const marketplaces =
@@ -791,6 +771,10 @@ export default async function handler(req, res) {
             ]
         );
 
+    // =====================================================
+    // TOTAL MARKETPLACES
+    // =====================================================
+
     const totalMarketplaces =
       marketplaces.reduce(
         (
@@ -799,8 +783,7 @@ export default async function handler(req, res) {
         ) =>
           soma +
           Number(
-            item.faturamento ||
-            0
+            item.faturamento || 0
           ),
         0
       );
@@ -811,14 +794,12 @@ export default async function handler(req, res) {
 
     const ticketMedio =
       pedidosHoje > 0
-
         ? faturamentoHoje /
           pedidosHoje
-
         : 0;
 
     // =====================================================
-    // RETORNO
+    // RESPOSTA
     // =====================================================
 
     return res.status(200).json({
@@ -831,7 +812,13 @@ export default async function handler(req, res) {
       pedidos:
         todosPedidos,
 
-      produtos,
+      /*
+        Produtos não são buscados aqui.
+        Isso deixa a atualização muito mais rápida
+        e evita requisições desnecessárias ao Bling.
+      */
+
+      produtos: [],
 
       faturamentoHoje,
 
@@ -856,9 +843,7 @@ export default async function handler(req, res) {
 
         trintaDias:
           periodo30
-
       }
-
     });
 
   } catch (error) {
@@ -875,8 +860,6 @@ export default async function handler(req, res) {
       error:
         error?.message ||
         "Erro interno do servidor"
-
     });
-
   }
 }
