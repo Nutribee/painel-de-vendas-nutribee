@@ -1,12 +1,19 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
+
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
   <title>Painel de Vendas Nutribee</title>
 
   <style>
+
     * {
       box-sizing: border-box;
     }
@@ -78,9 +85,15 @@
       color: #b00020;
     }
 
+    /* ==============================
+       CARDS
+    ============================== */
+
     .cards {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns:
+        repeat(auto-fit, minmax(220px, 1fr));
+
       gap: 15px;
       margin-bottom: 25px;
     }
@@ -89,7 +102,8 @@
       background: white;
       border-radius: 12px;
       padding: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      box-shadow:
+        0 2px 8px rgba(0,0,0,0.08);
     }
 
     .card span {
@@ -104,11 +118,60 @@
     }
 
     /* ==============================
+       PERÍODOS
+    ============================== */
+
+    .periodos-container {
+      margin-bottom: 30px;
+    }
+
+    .periodos-container h2 {
+      margin-bottom: 15px;
+    }
+
+    .periodos {
+      display: grid;
+
+      grid-template-columns:
+        repeat(auto-fit, minmax(220px, 1fr));
+
+      gap: 15px;
+    }
+
+    .periodo-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+
+      box-shadow:
+        0 2px 8px rgba(0,0,0,0.08);
+
+      border-top: 5px solid #159447;
+    }
+
+    .periodo-nome {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+
+    .periodo-valor {
+      font-size: 26px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .periodo-pedidos {
+      color: #777;
+      font-size: 14px;
+    }
+
+    /* ==============================
        MARKETPLACES
     ============================== */
 
     .marketplaces-container {
-      margin-bottom: 25px;
+      margin-bottom: 30px;
     }
 
     .marketplaces-container h2 {
@@ -117,7 +180,10 @@
 
     .marketplaces {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+
+      grid-template-columns:
+        repeat(auto-fit, minmax(220px, 1fr));
+
       gap: 15px;
     }
 
@@ -125,7 +191,10 @@
       background: white;
       border-radius: 12px;
       padding: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+
+      box-shadow:
+        0 2px 8px rgba(0,0,0,0.08);
+
       border-top: 5px solid #159447;
     }
 
@@ -188,6 +257,10 @@
       color: #777;
     }
 
+    /* ==============================
+       CELULAR
+    ============================== */
+
     @media (max-width: 600px) {
 
       .container {
@@ -202,24 +275,43 @@
         font-size: 21px;
       }
 
+      .periodo-valor {
+        font-size: 23px;
+      }
+
       .marketplace-faturamento {
         font-size: 22px;
       }
 
     }
+
   </style>
+
 </head>
+
 
 <body>
 
+
 <header>
-  <h1>📊 Painel de Vendas Nutribee</h1>
-  <p>Vendas, pedidos, produtos, custos e resultados</p>
+
+  <h1>
+    📊 Painel de Vendas Nutribee
+  </h1>
+
+  <p>
+    Vendas, pedidos, produtos, custos e resultados
+  </p>
+
 </header>
+
 
 <div class="container">
 
-  <!-- BOTÕES -->
+
+  <!-- ==============================
+       BOTÕES
+  ============================== -->
 
   <div class="acoes">
 
@@ -240,43 +332,184 @@
   </div>
 
 
-  <!-- STATUS -->
+  <!-- ==============================
+       STATUS
+  ============================== -->
 
-  <div id="status" class="status">
+  <div
+    id="status"
+    class="status"
+  >
     Aguardando conexão com o Bling...
   </div>
 
 
-  <!-- RESUMO -->
+  <!-- ==============================
+       RESUMO DO DIA
+  ============================== -->
 
   <div class="cards">
 
     <div class="card">
-      <span>Faturamento total</span>
+
+      <span>
+        Faturamento de hoje
+      </span>
+
       <strong id="faturamento">
         R$ 0,00
       </strong>
+
     </div>
 
+
     <div class="card">
-      <span>Pedidos</span>
+
+      <span>
+        Pedidos de hoje
+      </span>
+
       <strong id="totalPedidos">
         0
       </strong>
+
     </div>
 
+
     <div class="card">
-      <span>Produtos</span>
+
+      <span>
+        Produtos
+      </span>
+
       <strong id="totalProdutos">
         0
       </strong>
+
     </div>
 
+
     <div class="card">
-      <span>Ticket médio</span>
+
+      <span>
+        Ticket médio
+      </span>
+
       <strong id="ticketMedio">
         R$ 0,00
       </strong>
+
+    </div>
+
+  </div>
+
+
+  <!-- ==============================
+       VENDAS POR PERÍODO
+  ============================== -->
+
+  <div class="periodos-container">
+
+    <h2>
+      📅 Vendas por período
+    </h2>
+
+    <div
+      id="periodos"
+      class="periodos"
+    >
+
+      <div class="periodo-card">
+
+        <div class="periodo-nome">
+          Ontem
+        </div>
+
+        <div
+          class="periodo-valor"
+          id="valorOntem"
+        >
+          R$ 0,00
+        </div>
+
+        <div
+          class="periodo-pedidos"
+          id="pedidosOntem"
+        >
+          0 pedidos
+        </div>
+
+      </div>
+
+
+      <div class="periodo-card">
+
+        <div class="periodo-nome">
+          Últimos 7 dias
+        </div>
+
+        <div
+          class="periodo-valor"
+          id="valor7"
+        >
+          R$ 0,00
+        </div>
+
+        <div
+          class="periodo-pedidos"
+          id="pedidos7"
+        >
+          0 pedidos
+        </div>
+
+      </div>
+
+
+      <div class="periodo-card">
+
+        <div class="periodo-nome">
+          Últimos 15 dias
+        </div>
+
+        <div
+          class="periodo-valor"
+          id="valor15"
+        >
+          R$ 0,00
+        </div>
+
+        <div
+          class="periodo-pedidos"
+          id="pedidos15"
+        >
+          0 pedidos
+        </div>
+
+      </div>
+
+
+      <div class="periodo-card">
+
+        <div class="periodo-nome">
+          Últimos 30 dias
+        </div>
+
+        <div
+          class="periodo-valor"
+          id="valor30"
+        >
+          R$ 0,00
+        </div>
+
+        <div
+          class="periodo-pedidos"
+          id="pedidos30"
+        >
+          0 pedidos
+        </div>
+
+      </div>
+
     </div>
 
   </div>
@@ -284,7 +517,7 @@
 
   <!-- ==============================
        FATURAMENTO POR MARKETPLACE
-  =============================== -->
+  ============================== -->
 
   <div class="marketplaces-container">
 
@@ -308,7 +541,7 @@
 
   <!-- ==============================
        ÚLTIMOS PEDIDOS
-  =============================== -->
+  ============================== -->
 
   <div class="tabela-container">
 
@@ -321,12 +554,23 @@
       <thead>
 
         <tr>
-          <th>Pedido</th>
-          <th>Origem</th>
-          <th>Valor</th>
+
+          <th>
+            Pedido
+          </th>
+
+          <th>
+            Origem
+          </th>
+
+          <th>
+            Valor
+          </th>
+
         </tr>
 
       </thead>
+
 
       <tbody id="tabelaPedidos">
 
@@ -347,6 +591,7 @@
 
   </div>
 
+
 </div>
 
 
@@ -362,7 +607,9 @@ async function carregarDadosBling() {
   const status =
     document.getElementById("status");
 
+
   status.classList.remove("erro");
+
 
   status.innerText =
     "⏳ Buscando dados do Bling...";
@@ -388,22 +635,27 @@ async function carregarDadosBling() {
 
   try {
 
-    const resposta = await fetch(
-      "/api/bling-dados",
-      {
+    const resposta =
+      await fetch(
+        "/api/bling-dados",
+        {
 
-        method: "POST",
+          method: "POST",
 
-        headers: {
-          "Content-Type": "application/json"
-        },
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
 
-        body: JSON.stringify({
-          access_token: accessToken
-        })
+          body: JSON.stringify({
 
-      }
-    );
+            access_token:
+              accessToken
+
+          })
+
+        }
+      );
 
 
     const dados =
@@ -435,6 +687,10 @@ async function carregarDadosBling() {
       dados.marketplaces || [];
 
 
+    const periodos =
+      dados.periodos || {};
+
+
     atualizarPainel(
       produtos,
       pedidos
@@ -446,8 +702,13 @@ async function carregarDadosBling() {
     );
 
 
+    atualizarPeriodos(
+      periodos
+    );
+
+
     status.innerText =
-      `✅ Dados atualizados. ${pedidos.length} pedidos encontrados.`;
+      `✅ Dados atualizados. ${pedidos.length} pedidos encontrados nos últimos 30 dias.`;
 
 
   } catch (erro) {
@@ -458,7 +719,10 @@ async function carregarDadosBling() {
 
     status.innerText =
       "❌ Erro ao carregar dados: " +
-      erro.message;
+      (
+        erro.message ||
+        "Erro desconhecido"
+      );
 
   }
 
@@ -474,10 +738,43 @@ function atualizarPainel(
   pedidos
 ) {
 
-  let faturamento = 0;
+
+  /*
+     O backend traz os pedidos
+     dos últimos 30 dias.
+
+     Aqui filtramos somente
+     os pedidos de hoje.
+  */
+
+  const hoje =
+    new Date();
 
 
-  pedidos.forEach(
+  const hojeStr =
+    dataLocalISO(hoje);
+
+
+  const pedidosHoje =
+    pedidos.filter(
+      pedido => {
+
+        const data =
+          obterDataPedido(
+            pedido
+          );
+
+        return data === hojeStr;
+
+      }
+    );
+
+
+  let faturamento =
+    0;
+
+
+  pedidosHoje.forEach(
     pedido => {
 
       const valor =
@@ -485,14 +782,21 @@ function atualizarPainel(
           pedido.total || 0
         );
 
-      faturamento += valor;
+      if (
+        Number.isFinite(valor)
+      ) {
+
+        faturamento +=
+          valor;
+
+      }
 
     }
   );
 
 
   const quantidadePedidos =
-    pedidos.length;
+    pedidosHoje.length;
 
 
   const ticketMedio =
@@ -538,12 +842,112 @@ function atualizarPainel(
 
 
 /* =====================================================
-   FATURAMENTO POR MARKETPLACE
+   ATUALIZAR PERÍODOS
+===================================================== */
+
+function atualizarPeriodos(
+  periodos
+) {
+
+
+  const ontem =
+    periodos.ontem || {};
+
+
+  const seteDias =
+    periodos.seteDias || {};
+
+
+  const quinzeDias =
+    periodos.quinzeDias || {};
+
+
+  const trintaDias =
+    periodos.trintaDias || {};
+
+
+  /* ONTEM */
+
+  document.getElementById(
+    "valorOntem"
+  ).innerText =
+    formatarMoeda(
+      ontem.total || 0
+    );
+
+
+  document.getElementById(
+    "pedidosOntem"
+  ).innerText =
+    formatarQuantidadePedidos(
+      ontem.pedidos || 0
+    );
+
+
+  /* 7 DIAS */
+
+  document.getElementById(
+    "valor7"
+  ).innerText =
+    formatarMoeda(
+      seteDias.total || 0
+    );
+
+
+  document.getElementById(
+    "pedidos7"
+  ).innerText =
+    formatarQuantidadePedidos(
+      seteDias.pedidos || 0
+    );
+
+
+  /* 15 DIAS */
+
+  document.getElementById(
+    "valor15"
+  ).innerText =
+    formatarMoeda(
+      quinzeDias.total || 0
+    );
+
+
+  document.getElementById(
+    "pedidos15"
+  ).innerText =
+    formatarQuantidadePedidos(
+      quinzeDias.pedidos || 0
+    );
+
+
+  /* 30 DIAS */
+
+  document.getElementById(
+    "valor30"
+  ).innerText =
+    formatarMoeda(
+      trintaDias.total || 0
+    );
+
+
+  document.getElementById(
+    "pedidos30"
+  ).innerText =
+    formatarQuantidadePedidos(
+      trintaDias.pedidos || 0
+    );
+
+}
+
+
+/* =====================================================
+   MARKETPLACES
 ===================================================== */
 
 function atualizarMarketplaces(
   marketplaces
 ) {
+
 
   const container =
     document.getElementById(
@@ -557,10 +961,14 @@ function atualizarMarketplaces(
   ) {
 
     container.innerHTML = `
+
       <div class="sem-marketplaces">
+
         Nenhum marketplace encontrado
         nos pedidos de hoje.
+
       </div>
+
     `;
 
     return;
@@ -597,18 +1005,32 @@ function atualizarMarketplaces(
             <div class="marketplace-card">
 
               <div class="marketplace-nome">
-                🛒 ${escaparHtml(nome)}
+
+                🛒
+                ${escaparHtml(nome)}
+
               </div>
+
 
               <div class="marketplace-faturamento">
-                ${formatarMoeda(faturamento)}
+
+                ${formatarMoeda(
+                  faturamento
+                )}
+
               </div>
 
+
               <div class="marketplace-pedidos">
+
                 ${pedidos}
-                ${pedidos === 1
-                  ? "pedido"
-                  : "pedidos"}
+
+                ${
+                  pedidos === 1
+                    ? "pedido"
+                    : "pedidos"
+                }
+
               </div>
 
             </div>
@@ -630,6 +1052,7 @@ function atualizarTabelaPedidos(
   pedidos
 ) {
 
+
   const tabela =
     document.getElementById(
       "tabelaPedidos"
@@ -649,7 +1072,9 @@ function atualizarTabelaPedidos(
           colspan="3"
           class="vazio"
         >
+
           Nenhum pedido encontrado.
+
         </td>
 
       </tr>
@@ -679,15 +1104,10 @@ function atualizarTabelaPedidos(
             );
 
 
-          /*
-             Tenta mostrar o nome da loja
-             quando o Bling enviar.
-          */
-
           const origem =
-            pedido?.loja?.nome ||
-            pedido?.loja?.descricao ||
-            "Bling";
+            descobrirOrigem(
+              pedido
+            );
 
 
           return `
@@ -695,15 +1115,29 @@ function atualizarTabelaPedidos(
             <tr>
 
               <td>
-                ${escaparHtml(numero)}
+
+                ${escaparHtml(
+                  numero
+                )}
+
               </td>
 
-              <td>
-                ${escaparHtml(origem)}
-              </td>
 
               <td>
-                ${formatarMoeda(valor)}
+
+                ${escaparHtml(
+                  origem
+                )}
+
+              </td>
+
+
+              <td>
+
+                ${formatarMoeda(
+                  valor
+                )}
+
               </td>
 
             </tr>
@@ -713,6 +1147,130 @@ function atualizarTabelaPedidos(
         }
       )
       .join("");
+
+}
+
+
+/* =====================================================
+   DESCOBRIR ORIGEM DO PEDIDO
+===================================================== */
+
+function descobrirOrigem(
+  pedido
+) {
+
+
+  const possiveis = [
+
+    pedido?.loja?.nome,
+
+    pedido?.loja?.descricao,
+
+    pedido?.canalVenda?.nome,
+
+    pedido?.canalVenda?.descricao,
+
+    pedido?.canal?.nome,
+
+    pedido?.canal?.descricao,
+
+    pedido?.marketplace?.nome,
+
+    pedido?.marketplace?.descricao
+
+  ];
+
+
+  for (
+    const valor of possiveis
+  ) {
+
+    if (valor) {
+
+      return valor;
+
+    }
+
+  }
+
+
+  return "Bling";
+
+}
+
+
+/* =====================================================
+   DATA DO PEDIDO
+===================================================== */
+
+function obterDataPedido(
+  pedido
+) {
+
+  return String(
+    pedido?.data ||
+    pedido?.dataPedido ||
+    ""
+  ).substring(
+    0,
+    10
+  );
+
+}
+
+
+/* =====================================================
+   DATA LOCAL EM YYYY-MM-DD
+===================================================== */
+
+function dataLocalISO(
+  data
+) {
+
+  const ano =
+    data.getFullYear();
+
+
+  const mes =
+    String(
+      data.getMonth() + 1
+    ).padStart(
+      2,
+      "0"
+    );
+
+
+  const dia =
+    String(
+      data.getDate()
+    ).padStart(
+      2,
+      "0"
+    );
+
+
+  return `${ano}-${mes}-${dia}`;
+
+}
+
+
+/* =====================================================
+   FORMATAÇÃO DE QUANTIDADE
+===================================================== */
+
+function formatarQuantidadePedidos(
+  quantidade
+) {
+
+  const numero =
+    Number(
+      quantidade || 0
+    );
+
+
+  return numero === 1
+    ? "1 pedido"
+    : `${numero} pedidos`;
 
 }
 
@@ -752,11 +1310,31 @@ function escaparHtml(
   return String(
     valor ?? ""
   )
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+
+    .replaceAll(
+      "'",
+      "&#039;"
+    );
 
 }
 
@@ -766,6 +1344,7 @@ function escaparHtml(
 ===================================================== */
 
 function autorizarBling() {
+
 
   const clientId =
     "1c91f534729d1b705ae2229ea4ac0c345ce37cc7";
@@ -783,11 +1362,20 @@ function autorizarBling() {
 
   const url =
     "https://www.bling.com.br/Api/v3/oauth/authorize" +
+
     "?response_type=code" +
+
     "&client_id=" +
-    encodeURIComponent(clientId) +
+
+    encodeURIComponent(
+      clientId
+    ) +
+
     "&state=" +
-    encodeURIComponent(state);
+
+    encodeURIComponent(
+      state
+    );
 
 
   window.location.href =
@@ -802,10 +1390,13 @@ function autorizarBling() {
 
 // Os dados serão carregados
 // quando você clicar em:
+//
 // 🔄 Atualizar Bling
 
 
 </script>
 
+
 </body>
+
 </html>
