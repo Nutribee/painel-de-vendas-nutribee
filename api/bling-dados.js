@@ -25,6 +25,42 @@ export default async function handler(req, res) {
     const esperar = (ms) =>
       new Promise((resolve) => setTimeout(resolve, ms));
 
+    // =====================================================
+    // TRANSFORMAR ERRO DO BLING EM TEXTO
+    // =====================================================
+
+    function transformarErro(data, status) {
+      if (typeof data === "string") {
+        return data;
+      }
+
+      if (data?.error?.message) {
+        return data.error.message;
+      }
+
+      if (data?.error?.description) {
+        return data.error.description;
+      }
+
+      if (data?.message) {
+        return data.message;
+      }
+
+      if (data?.error && typeof data.error === "string") {
+        return data.error;
+      }
+
+      try {
+        return `Erro do Bling (HTTP ${status}): ${JSON.stringify(data)}`;
+      } catch {
+        return `Erro do Bling (HTTP ${status}).`;
+      }
+    }
+
+    // =====================================================
+    // BUSCAR DADOS DO BLING
+    // =====================================================
+
     async function buscarBling(url, tentativa = 1) {
       try {
         const response = await fetch(url, {
@@ -44,6 +80,7 @@ export default async function handler(req, res) {
           };
         }
 
+        // TOKEN EXPIRADO
         if (response.status === 401) {
           return {
             ok: false,
@@ -55,6 +92,7 @@ export default async function handler(req, res) {
           };
         }
 
+        // LIMITE DO BLING
         if (response.status === 429) {
           if (tentativa >= 6) {
             return {
@@ -81,6 +119,7 @@ export default async function handler(req, res) {
           return buscarBling(url, tentativa + 1);
         }
 
+        // OUTROS ERROS
         if (!response.ok) {
           return {
             ok: false,
@@ -116,12 +155,20 @@ export default async function handler(req, res) {
       }
     }
 
+    // =====================================================
+    // DATA DE HOJE
+    // =====================================================
+
     const hoje = new Intl.DateTimeFormat("en-CA", {
       timeZone: "America/Sao_Paulo",
       year: "numeric",
       month: "2-digit",
       day: "2-digit"
     }).format(new Date());
+
+    // =====================================================
+    // BUSCAR PEDIDOS
+    // =====================================================
 
     const todosPedidos = [];
 
@@ -141,9 +188,13 @@ export default async function handler(req, res) {
       const resposta = await buscarBling(url);
 
       if (!resposta.ok) {
+
         return res.status(resposta.status).json({
           success: false,
-          error: resposta.data,
+          error: transformarErro(
+            resposta.data,
+            resposta.status
+          ),
           pagina
         });
       }
@@ -164,25 +215,28 @@ export default async function handler(req, res) {
       await esperar(500);
     }
 
+    // =====================================================
+    // BUSCAR PRODUTOS
+    // =====================================================
+
+    let produtos = [];
+
     const respostaProdutos = await buscarBling(
       "https://api.bling.com.br/Api/v3/produtos?pagina=1&limite=100"
     );
 
-    if (!respostaProdutos.ok) {
-      return res.status(respostaProdutos.status).json({
-        success: false,
-        error: respostaProdutos.data
-      });
+    // Se produtos der erro, não derruba o painel
+    if (respostaProdutos.ok) {
+
+      produtos =
+        Array.isArray(respostaProdutos.data?.data)
+          ? respostaProdutos.data.data
+          : [];
     }
 
-    const produtos =
-      Array.isArray(respostaProdutos.data?.data)
-        ? respostaProdutos.data.data
-        : [];
-
-    // ==========================================
-    // MARKETPLACES DA NUTRIBEE
-    // ==========================================
+    // =====================================================
+    // MARKETPLACES
+    // =====================================================
 
     const mapaMarketplaces = {
 
@@ -196,6 +250,10 @@ export default async function handler(req, res) {
 
     };
 
+    // =====================================================
+    // DESCOBRIR MARKETPLACE
+    // =====================================================
+
     function descobrirMarketplace(pedido) {
 
       const possiveisIds = [
@@ -206,10 +264,19 @@ export default async function handler(req, res) {
 
         pedido?.canal?.id,
 
-        pedido?.marketplace?.id
+        pedido?.marketplace?.id,
+
+        pedido?.lojaId,
+
+        pedido?.canalVendaId,
+
+        pedido?.canalId,
+
+        pedido?.marketplaceId
 
       ];
 
+      // Primeiro tenta pelo ID
       for (const id of possiveisIds) {
 
         const nome =
@@ -220,6 +287,7 @@ export default async function handler(req, res) {
         }
       }
 
+      // Depois tenta pelo texto
       const textos = [
 
         pedido?.loja?.nome,
@@ -238,7 +306,9 @@ export default async function handler(req, res) {
 
         pedido?.marketplace?.descricao,
 
-        pedido?.numeroLoja
+        pedido?.numeroLoja,
+
+        pedido?.numeroCanal
 
       ]
         .filter(Boolean)
@@ -268,9 +338,9 @@ export default async function handler(req, res) {
       return "Outros";
     }
 
-    // ==========================================
-    // SOMAR FATURAMENTO
-    // ==========================================
+    // =====================================================
+    // SOMAR FATURAMENTO POR MARKETPLACE
+    // =====================================================
 
     const totais = {};
 
@@ -303,6 +373,10 @@ export default async function handler(req, res) {
       totais[nome].pedidos++;
     }
 
+    // =====================================================
+    // ORDEM DOS MARKETPLACES
+    // =====================================================
+
     const ordem = [
 
       "Mercado Livre",
@@ -319,12 +393,30 @@ export default async function handler(req, res) {
 
     const marketplaces =
       ordem
-        .filter((nome) => totais[nome])
-        .map((nome) => totais[nome]);
+        .filter(
+          (nome) => totais[nome]
+        )
+        .map(
+          (nome) => totais[nome]
+        );
 
-    // ==========================================
+    // =====================================================
+    // TOTAL DOS MARKETPLACES
+    // =====================================================
+
+    const totalMarketplaces =
+      marketplaces.reduce(
+
+        (soma, item) =>
+          soma + item.faturamento,
+
+        0
+
+      );
+
+    // =====================================================
     // RETORNO
-    // ==========================================
+    // =====================================================
 
     return res.status(200).json({
 
@@ -338,12 +430,7 @@ export default async function handler(req, res) {
 
       marketplaces,
 
-      totalMarketplaces:
-        marketplaces.reduce(
-          (soma, item) =>
-            soma + item.faturamento,
-          0
-        )
+      totalMarketplaces
 
     });
 
@@ -360,6 +447,5 @@ export default async function handler(req, res) {
         "Erro interno do servidor"
 
     });
-
   }
 }
