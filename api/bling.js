@@ -42,7 +42,8 @@ export default async function handler(req, res) {
         headers: {
           "Authorization": `Basic ${credentials}`,
           "Content-Type": "application/x-www-form-urlencoded",
-          "Accept": "application/json"
+          "Accept": "application/json",
+"enable-jwt": "1"
         },
         body: body
       }
