@@ -24,11 +24,16 @@ export default async function handler(req, res) {
       "enable-jwt": "1"
     };
 
+    // =====================================================
+    // FUNÇÃO DE ESPERA
+    // =====================================================
+
     const esperar = (ms) =>
       new Promise(resolve => setTimeout(resolve, ms));
 
+
     // =====================================================
-    // CONSULTA SEGURA AO BLING
+    // FUNÇÃO SEGURA PARA CONSULTAR O BLING
     // =====================================================
 
     async function buscarBling(url, tentativa = 1) {
@@ -52,7 +57,11 @@ export default async function handler(req, res) {
           };
         }
 
+
+        // =================================================
         // TOKEN EXPIRADO
+        // =================================================
+
         if (response.status === 401) {
 
           return {
@@ -66,7 +75,11 @@ export default async function handler(req, res) {
 
         }
 
-        // LIMITE DO BLING
+
+        // =================================================
+        // LIMITE DE REQUISIÇÕES
+        // =================================================
+
         if (response.status === 429) {
 
           if (tentativa >= 5) {
@@ -88,14 +101,19 @@ export default async function handler(req, res) {
           const espera =
             Number.isFinite(retryAfter) && retryAfter > 0
               ? retryAfter * 1000
-              : tentativa * 2000;
+              : tentativa * 2500;
 
           await esperar(espera);
 
           return buscarBling(url, tentativa + 1);
+
         }
 
+
+        // =================================================
         // OUTROS ERROS
+        // =================================================
+
         if (!response.ok) {
 
           return {
@@ -105,6 +123,7 @@ export default async function handler(req, res) {
           };
 
         }
+
 
         return {
           ok: true,
@@ -129,15 +148,17 @@ export default async function handler(req, res) {
 
         }
 
-        await esperar(tentativa * 1000);
+        await esperar(tentativa * 1500);
 
         return buscarBling(url, tentativa + 1);
+
       }
 
     }
 
+
     // =====================================================
-    // DATA ATUAL
+    // DATA ATUAL - HORÁRIO DO BRASIL
     // =====================================================
 
     const hoje = new Intl.DateTimeFormat("en-CA", {
@@ -146,6 +167,7 @@ export default async function handler(req, res) {
       month: "2-digit",
       day: "2-digit"
     }).format(new Date());
+
 
     // =====================================================
     // PEDIDOS DO DIA
@@ -159,6 +181,7 @@ export default async function handler(req, res) {
 
     const maxPaginasPedidos = 10;
 
+
     while (pagina <= maxPaginasPedidos) {
 
       const url =
@@ -168,7 +191,9 @@ export default async function handler(req, res) {
         `&dataInicial=${hoje}` +
         `&dataFinal=${hoje}`;
 
+
       const resposta = await buscarBling(url);
+
 
       if (!resposta.ok) {
 
@@ -180,37 +205,45 @@ export default async function handler(req, res) {
 
       }
 
+
       const pedidos =
         Array.isArray(resposta.data?.data)
           ? resposta.data.data
           : [];
 
+
       todosPedidos.push(...pedidos);
 
-      // Chegou ao final
+
+      // Se veio menos que 100, terminou
       if (pedidos.length < limitePedidos) {
         break;
       }
 
+
       pagina++;
 
-      // Respeita limite do Bling
-      await esperar(500);
+
+      // Evita excesso de requisições
+      await esperar(700);
+
     }
+
 
     // =====================================================
     // PRODUTOS
     // =====================================================
-    // NÃO vamos mais baixar todo o catálogo.
-    // Apenas 100 produtos para o painel não travar.
 
-    await esperar(500);
+    await esperar(700);
+
 
     const urlProdutos =
       "https://api.bling.com.br/Api/v3/produtos?pagina=1&limite=100";
 
+
     const respostaProdutos =
       await buscarBling(urlProdutos);
+
 
     if (!respostaProdutos.ok) {
 
@@ -221,10 +254,165 @@ export default async function handler(req, res) {
 
     }
 
+
     const produtos =
       Array.isArray(respostaProdutos.data?.data)
         ? respostaProdutos.data.data
         : [];
+
+
+    // =====================================================
+    // IDENTIFICAR OS MARKETPLACES
+    // =====================================================
+
+    const idsLojas = [
+      ...new Set(
+
+        todosPedidos
+          .map(pedido => pedido?.loja?.id)
+          .filter(id => id !== undefined && id !== null)
+          .map(id => String(id))
+
+      )
+    ];
+
+
+    // =====================================================
+    // BUSCAR NOME DOS CANAIS
+    // =====================================================
+
+    const canais = {};
+
+
+    for (const lojaId of idsLojas) {
+
+      await esperar(700);
+
+
+      const respostaCanal = await buscarBling(
+        `https://api.bling.com.br/Api/v3/canais-venda/${encodeURIComponent(lojaId)}`
+      );
+
+
+      if (respostaCanal.ok) {
+
+        const canal =
+          respostaCanal.data?.data || {};
+
+
+        canais[lojaId] = {
+
+          id: lojaId,
+
+          nome:
+            canal.nome ||
+            canal.descricao ||
+            canal.nomeCanal ||
+            canal.nomeIntegracao ||
+            `Canal ${lojaId}`
+
+        };
+
+      } else {
+
+        canais[lojaId] = {
+
+          id: lojaId,
+
+          nome: `Canal ${lojaId}`
+
+        };
+
+      }
+
+    }
+
+
+    // =====================================================
+    // FATURAMENTO POR MARKETPLACE
+    // =====================================================
+
+    const faturamentoPorMarketplace = {};
+
+
+    for (const pedido of todosPedidos) {
+
+      const lojaId =
+        pedido?.loja?.id !== undefined &&
+        pedido?.loja?.id !== null
+          ? String(pedido.loja.id)
+          : "sem_loja";
+
+
+      const nomeMarketplace =
+        canais[lojaId]?.nome ||
+        pedido?.loja?.nome ||
+        `Canal ${lojaId}`;
+
+
+      const valor =
+        Number(pedido?.total) || 0;
+
+
+      if (!faturamentoPorMarketplace[lojaId]) {
+
+        faturamentoPorMarketplace[lojaId] = {
+
+          id: lojaId,
+
+          nome: nomeMarketplace,
+
+          faturamento: 0,
+
+          pedidos: 0
+
+        };
+
+      }
+
+
+      faturamentoPorMarketplace[lojaId].faturamento += valor;
+
+      faturamentoPorMarketplace[lojaId].pedidos += 1;
+
+    }
+
+
+    // =====================================================
+    // CONVERTER PARA ARRAY
+    // =====================================================
+
+    const marketplaces =
+      Object.values(faturamentoPorMarketplace);
+
+
+    // Ordena pelo maior faturamento
+    marketplaces.sort(
+      (a, b) => b.faturamento - a.faturamento
+    );
+
+
+    // =====================================================
+    // FATURAMENTO TOTAL
+    // =====================================================
+
+    const faturamentoTotal =
+      todosPedidos.reduce(
+        (total, pedido) =>
+          total + (Number(pedido?.total) || 0),
+        0
+      );
+
+
+    // =====================================================
+    // TICKET MÉDIO
+    // =====================================================
+
+    const ticketMedio =
+      todosPedidos.length > 0
+        ? faturamentoTotal / todosPedidos.length
+        : 0;
+
 
     // =====================================================
     // RETORNO
@@ -240,13 +428,22 @@ export default async function handler(req, res) {
 
       totalProdutos: produtos.length,
 
+      faturamentoTotal,
+
+      ticketMedio,
+
       paginasPedidos: pagina,
 
       pedidos: todosPedidos,
 
-      produtos: produtos
+      produtos,
+
+      canais,
+
+      marketplaces
 
     });
+
 
   } catch (error) {
 
@@ -254,6 +451,7 @@ export default async function handler(req, res) {
       "Erro geral ao buscar dados do Bling:",
       error
     );
+
 
     return res.status(500).json({
 
