@@ -1,35 +1,38 @@
 // ============================================================
 // PAINEL DE VENDAS NUTRIBEE - BLING
-// MARKETPLACES + VENDAS + PERÍODOS
+// VERSÃO CORRIGIDA
 // ============================================================
 
-const CACHE_DADOS_TTL = 2 * 60 * 1000;
+const CACHE_DADOS_TTL = 30 * 1000;
 const CACHE_CANAIS_TTL = 60 * 60 * 1000;
-const INTERVALO = 400;
+
+// Bling permite até 3 requisições por segundo.
+// 360ms mantém uma margem de segurança.
+const INTERVALO = 360;
+
+// Aumentado para não parar artificialmente em 5.000 pedidos.
+const MAX_PAGINAS = 200;
+const LIMITE_PAGINA = 100;
+
+
+// ============================================================
+// CACHE GLOBAL
+// ============================================================
 
 const cacheDados =
-  globalThis.__blingCacheDados ||
+  globalThis.__blingCacheDadosV2 ||
   new Map();
 
-globalThis.__blingCacheDados = cacheDados;
+globalThis.__blingCacheDadosV2 =
+  cacheDados;
+
 
 const cacheCanais =
-  globalThis.__blingCacheCanais ||
+  globalThis.__blingCacheCanaisV2 ||
   new Map();
 
-globalThis.__blingCacheCanais = cacheCanais;
-
-
-// ============================================================
-// MARKETPLACES DA CONTA NUTRIBEE
-// ============================================================
-
-const MARKETPLACES_FIXOS = new Map([
-  ["204824338", "Mercado Livre"],
-  ["205972730", "Shopee"],
-  ["205413635", "TikTok Shop"],
-  ["205227624", "Amazon"]
-]);
+globalThis.__blingCacheCanaisV2 =
+  cacheCanais;
 
 
 // ============================================================
@@ -84,8 +87,7 @@ export default async function handler(req, res) {
     if (
       !forceRefresh &&
       cacheAtual &&
-      Date.now() -
-        cacheAtual.timestamp <
+      Date.now() - cacheAtual.timestamp <
         CACHE_DADOS_TTL
     ) {
 
@@ -110,10 +112,7 @@ export default async function handler(req, res) {
         "application/json",
 
       "Content-Type":
-        "application/json",
-
-      "enable-jwt":
-        "1"
+        "application/json"
 
     };
 
@@ -159,7 +158,7 @@ export default async function handler(req, res) {
 
 
     // ========================================================
-    // CONSULTAR BLING
+    // REQUISIÇÃO AO BLING
     // ========================================================
 
     async function buscarBling(
@@ -234,7 +233,7 @@ export default async function handler(req, res) {
 
 
         // ====================================================
-        // LIMITE 429
+        // LIMITE DA API
         // ====================================================
 
         if (
@@ -242,7 +241,7 @@ export default async function handler(req, res) {
         ) {
 
           if (
-            tentativa >= 4
+            tentativa >= 5
           ) {
 
             return {
@@ -279,7 +278,7 @@ export default async function handler(req, res) {
 
               ? retryAfter * 1000
 
-              : 3000 * tentativa;
+              : 2500 * tentativa;
 
 
           await esperar(
@@ -432,7 +431,7 @@ export default async function handler(req, res) {
 
 
     // ========================================================
-    // DATAS
+    // DATA ATUAL - BRASIL
     // ========================================================
 
     function hojeBrasil() {
@@ -440,7 +439,6 @@ export default async function handler(req, res) {
       return new Intl.DateTimeFormat(
         "en-CA",
         {
-
           timeZone:
             "America/Sao_Paulo",
 
@@ -452,7 +450,6 @@ export default async function handler(req, res) {
 
           day:
             "2-digit"
-
         }
       ).format(
         new Date()
@@ -461,14 +458,27 @@ export default async function handler(req, res) {
     }
 
 
+    // ========================================================
+    // DIMINUIR DIAS
+    // ========================================================
+
     function diminuirDias(
       dataStr,
       quantidade
     ) {
 
+      const partes =
+        dataStr.split("-");
+
+
       const data =
         new Date(
-          `${dataStr}T12:00:00-03:00`
+          Number(partes[0]),
+          Number(partes[1]) - 1,
+          Number(partes[2]),
+          12,
+          0,
+          0
         );
 
 
@@ -478,12 +488,29 @@ export default async function handler(req, res) {
       );
 
 
-      return data
-        .toISOString()
-        .substring(
-          0,
-          10
+      const ano =
+        data.getFullYear();
+
+
+      const mes =
+        String(
+          data.getMonth() + 1
+        ).padStart(
+          2,
+          "0"
         );
+
+
+      const dia =
+        String(
+          data.getDate()
+        ).padStart(
+          2,
+          "0"
+        );
+
+
+      return `${ano}-${mes}-${dia}`;
 
     }
 
@@ -498,6 +525,11 @@ export default async function handler(req, res) {
         1
       );
 
+
+    // Inclusivos:
+    // hoje + 6 dias anteriores
+    // hoje + 14 dias anteriores
+    // hoje + 29 dias anteriores
 
     const inicio7Str =
       diminuirDias(
@@ -521,118 +553,160 @@ export default async function handler(req, res) {
 
 
     // ========================================================
-    // BUSCAR PEDIDOS
+    // NORMALIZAR DATA
+    //
+    // Aceita:
+    // 2026-08-15
+    // 2026-08-15T10:30:00
+    // 15/08/2026
+    // 15-08-2026
     // ========================================================
 
-    const todosPedidos = [];
-
-    const limite = 100;
-
-    const MAX_PAGINAS = 50;
-
-
-    for (
-      let pagina = 1;
-      pagina <= MAX_PAGINAS;
-      pagina++
+    function normalizarData(
+      valor
     ) {
 
-      const url =
-        "https://api.bling.com.br/Api/v3/pedidos/vendas" +
+      if (
+        valor === undefined ||
+        valor === null
+      ) {
 
-        `?pagina=${pagina}` +
+        return "";
 
-        `&limite=${limite}` +
-
-        `&dataInicial=${inicio30Str}` +
-
-        `&dataFinal=${hojeStr}`;
+      }
 
 
-      const resposta =
-        await buscarBling(
-          url
+      const texto =
+        String(valor)
+          .trim();
+
+
+      if (!texto) {
+
+        return "";
+
+      }
+
+
+      // ISO
+      const iso =
+        texto.match(
+          /^(\d{4})-(\d{2})-(\d{2})/
         );
 
 
-      if (
-        !resposta.ok
-      ) {
+      if (iso) {
 
-        return res.status(
-          resposta.status
-        ).json({
-
-          success: false,
-
-          error:
-            transformarErro(
-              resposta.data,
-              resposta.status
-            ),
-
-          pagina
-
-        });
+        return `${iso[1]}-${iso[2]}-${iso[3]}`;
 
       }
 
 
-      const pedidos =
-        Array.isArray(
-          resposta.data?.data
+      // Brasileiro
+      const br =
+        texto.match(
+          /^(\d{2})[\/-](\d{2})[\/-](\d{4})/
+        );
+
+
+      if (br) {
+
+        return `${br[3]}-${br[2]}-${br[1]}`;
+
+      }
+
+
+      // Última tentativa
+      const data =
+        new Date(texto);
+
+
+      if (
+        !Number.isNaN(
+          data.getTime()
         )
-          ? resposta.data.data
-          : [];
-
-
-      todosPedidos.push(
-        ...pedidos
-      );
-
-
-      if (
-        pedidos.length <
-        limite
       ) {
 
-        break;
+        const ano =
+          data.getFullYear();
+
+        const mes =
+          String(
+            data.getMonth() + 1
+          ).padStart(
+            2,
+            "0"
+          );
+
+        const dia =
+          String(
+            data.getDate()
+          ).padStart(
+            2,
+            "0"
+          );
+
+        return `${ano}-${mes}-${dia}`;
 
       }
+
+
+      return "";
 
     }
 
 
     // ========================================================
-    // DATA DO PEDIDO
+    // OBTER DATA DO PEDIDO
     // ========================================================
 
     function obterDataPedido(
       pedido
     ) {
 
-      return String(
+      const possiveis = [
 
-        pedido?.data ||
+        pedido?.data,
 
-        pedido?.dataPedido ||
+        pedido?.dataEmissao,
 
-        pedido?.dataEmissao ||
+        pedido?.dataPedido,
 
-        pedido?.dataInclusao ||
+        pedido?.dataVenda,
 
-        ""
+        pedido?.dataInclusao,
 
-      ).substring(
-        0,
-        10
-      );
+        pedido?.dataAlteracao
+
+      ];
+
+
+      for (
+        const valor of possiveis
+      ) {
+
+        const data =
+          normalizarData(
+            valor
+          );
+
+
+        if (data) {
+
+          return data;
+
+        }
+
+      }
+
+
+      return "";
 
     }
 
 
     // ========================================================
-    // VALOR
+    // VALOR DO PEDIDO
     // ========================================================
 
     function obterValorPedido(
@@ -656,8 +730,46 @@ export default async function handler(req, res) {
         const valor of valores
       ) {
 
+        if (
+          typeof valor ===
+          "string"
+        ) {
+
+          const limpo =
+            valor
+              .replace(
+                /\./g,
+                ""
+              )
+              .replace(
+                ",",
+                "."
+              );
+
+
+          const numero =
+            Number(
+              limpo
+            );
+
+
+          if (
+            Number.isFinite(
+              numero
+            )
+          ) {
+
+            return numero;
+
+          }
+
+        }
+
+
         const numero =
-          Number(valor);
+          Number(
+            valor
+          );
 
 
         if (
@@ -679,10 +791,10 @@ export default async function handler(req, res) {
 
 
     // ========================================================
-    // ID DA LOJA
+    // ID DO CANAL
     // ========================================================
 
-    function obterIdLoja(
+    function obterIdsCanal(
       pedido
     ) {
 
@@ -707,33 +819,30 @@ export default async function handler(req, res) {
       ];
 
 
-      for (
-        const id of ids
-      ) {
-
-        if (
-          id !== undefined &&
-          id !== null &&
-          String(id) !== ""
-        ) {
-
-          return String(id);
-
-        }
-
-      }
-
-
-      return null;
+      return [
+        ...new Set(
+          ids
+            .filter(
+              id =>
+                id !== undefined &&
+                id !== null &&
+                String(id).trim() !== ""
+            )
+            .map(
+              id =>
+                String(id)
+            )
+        )
+      ];
 
     }
 
 
     // ========================================================
-    // NOME QUE JÁ VEIO NO PEDIDO
+    // NOME DO CANAL QUE VEIO NO PEDIDO
     // ========================================================
 
-    function obterNomePedido(
+    function obterNomeCanalPedido(
       pedido
     ) {
 
@@ -777,13 +886,13 @@ export default async function handler(req, res) {
       }
 
 
-      return null;
+      return "";
 
     }
 
 
     // ========================================================
-    // NORMALIZAR MARKETPLACE
+    // NORMALIZAR NOME DO MARKETPLACE
     // ========================================================
 
     function normalizarMarketplace(
@@ -818,6 +927,7 @@ export default async function handler(req, res) {
         texto.includes(
           "mercadolibre"
         ) ||
+        texto === "meli" ||
         texto.includes(
           "meli"
         )
@@ -922,10 +1032,25 @@ export default async function handler(req, res) {
       if (
         texto.includes(
           "casas bahia"
+        ) ||
+        texto.includes(
+          "casasbahia"
         )
       ) {
 
         return "Casas Bahia";
+
+      }
+
+
+      if (
+        texto === "bling" ||
+        texto.includes(
+          "bling api"
+        )
+      ) {
+
+        return "Bling";
 
       }
 
@@ -938,127 +1063,200 @@ export default async function handler(req, res) {
 
 
     // ========================================================
-    // MAPA DE CANAIS
+    // BUSCAR PEDIDOS
     // ========================================================
 
-    const mapaCanais =
-      new Map(
-        MARKETPLACES_FIXOS
-      );
-
-
-    // Primeiro usa qualquer nome que já venha no pedido.
-
-    for (
-      const pedido of todosPedidos
-    ) {
-
-      const id =
-        obterIdLoja(
-          pedido
-        );
-
-
-      const nome =
-        obterNomePedido(
-          pedido
-        );
-
-
-      if (
-        id &&
-        nome &&
-        !mapaCanais.has(id)
-      ) {
-
-        mapaCanais.set(
-          id,
-          normalizarMarketplace(
-            nome
-          )
-        );
-
-      }
-
-    }
-
-
-    // ========================================================
-    // IDS DESCONHECIDOS
-    // ========================================================
-
-    const idsParaConsultar =
-      new Set();
+    const todosPedidos = [];
 
 
     for (
-      const pedido of todosPedidos
+      let pagina = 1;
+      pagina <= MAX_PAGINAS;
+      pagina++
     ) {
 
-      const id =
-        obterIdLoja(
-          pedido
-        );
+      const url =
+        "https://api.bling.com.br/Api/v3/pedidos/vendas" +
 
+        `?pagina=${pagina}` +
 
-      if (
-        id &&
-        !mapaCanais.has(id)
-      ) {
+        `&limite=${LIMITE_PAGINA}` +
 
-        idsParaConsultar.add(
-          id
-        );
+        `&dataInicial=${inicio30Str}` +
 
-      }
-
-    }
-
-
-    // Consulta somente canais que ainda não conhecemos.
-
-    for (
-      const id of idsParaConsultar
-    ) {
-
-      const cacheCanal =
-        cacheCanais.get(
-          id
-        );
-
-
-      if (
-        cacheCanal &&
-        Date.now() -
-          cacheCanal.timestamp <
-          CACHE_CANAIS_TTL
-      ) {
-
-        mapaCanais.set(
-          id,
-          cacheCanal.nome
-        );
-
-        continue;
-
-      }
+        `&dataFinal=${hojeStr}`;
 
 
       const resposta =
         await buscarBling(
-
-          `https://api.bling.com.br/Api/v3/canais-venda/${encodeURIComponent(id)}`
-
+          url
         );
 
 
       if (
-        resposta.ok
+        !resposta.ok
       ) {
 
-        const canal =
-          resposta.data?.data ||
-          {};
+        return res.status(
+          resposta.status
+        ).json({
+
+          success: false,
+
+          error:
+            transformarErro(
+              resposta.data,
+              resposta.status
+            ),
+
+          pagina
+
+        });
+
+      }
+
+
+      const pedidos =
+        Array.isArray(
+          resposta.data?.data
+        )
+          ? resposta.data.data
+          : [];
+
+
+      todosPedidos.push(
+        ...pedidos
+      );
+
+
+      // Se veio menos que 100,
+      // chegamos ao final.
+
+      if (
+        pedidos.length <
+        LIMITE_PAGINA
+      ) {
+
+        break;
+
+      }
+
+    }
+
+
+    // ========================================================
+    // BUSCAR CANAIS DE VENDA DO BLING
+    //
+    // Isso elimina a dependência somente dos IDs fixos.
+    // ========================================================
+
+    const mapaCanais =
+      new Map();
+
+
+    async function carregarCanais() {
+
+      const agora =
+        Date.now();
+
+
+      const cache =
+        cacheCanais.get(
+          "todos"
+        );
+
+
+      if (
+        cache &&
+        agora - cache.timestamp <
+          CACHE_CANAIS_TTL
+      ) {
+
+        return cache.data;
+
+      }
+
+
+      const canais = [];
+
+
+      try {
+
+        for (
+          let pagina = 1;
+          pagina <= 20;
+          pagina++
+        ) {
+
+          const url =
+            "https://api.bling.com.br/Api/v3/canais-venda" +
+            `?pagina=${pagina}` +
+            `&limite=100`;
+
+
+          const resposta =
+            await buscarBling(
+              url
+            );
+
+
+          if (
+            !resposta.ok
+          ) {
+
+            break;
+
+          }
+
+
+          const lista =
+            Array.isArray(
+              resposta.data?.data
+            )
+              ? resposta.data.data
+              : [];
+
+
+          canais.push(
+            ...lista
+          );
+
+
+          if (
+            lista.length <
+            100
+          ) {
+
+            break;
+
+          }
+
+        }
+
+      } catch {
+
+        // Mantém os canais fixos
+        // caso a consulta não esteja disponível.
+
+      }
+
+
+      for (
+        const canal of canais
+      ) {
+
+        const id =
+          canal?.id;
+
+
+        if (
+          id === undefined ||
+          id === null
+        ) {
+
+          continue;
+
+        }
 
 
         const nome =
@@ -1066,45 +1264,75 @@ export default async function handler(req, res) {
           canal?.descricao ||
           canal?.nomeCanal ||
           canal?.canal?.nome ||
-          canal?.integracao?.nome;
-
-
-        const nomeFinal =
-          nome
-            ? normalizarMarketplace(
-                nome
-              )
-            : "Outros";
+          "Outros";
 
 
         mapaCanais.set(
-          id,
-          nomeFinal
-        );
-
-
-        cacheCanais.set(
-          id,
-          {
-
-            nome:
-              nomeFinal,
-
-            timestamp:
-              Date.now()
-
-          }
-
-        );
-
-      } else {
-
-        mapaCanais.set(
-          id,
-          "Outros"
+          String(id),
+          normalizarMarketplace(
+            nome
+          )
         );
 
       }
+
+
+      cacheCanais.set(
+        "todos",
+        {
+
+          timestamp:
+            agora,
+
+          data:
+            mapaCanais
+
+        }
+      );
+
+
+      return mapaCanais;
+
+    }
+
+
+    await carregarCanais();
+
+
+    // ========================================================
+    // IDS FIXOS CONHECIDOS
+    //
+    // Servem como garantia adicional.
+    // ========================================================
+
+    const canaisFixos = {
+
+      "204824338":
+        "Mercado Livre",
+
+      "205972730":
+        "Shopee",
+
+      "205413635":
+        "TikTok Shop",
+
+      "205227624":
+        "Amazon"
+
+    };
+
+
+    for (
+      const [id, nome]
+      of Object.entries(
+        canaisFixos
+      )
+    ) {
+
+      mapaCanais.set(
+        id,
+        nome
+      );
 
     }
 
@@ -1117,42 +1345,136 @@ export default async function handler(req, res) {
       pedido
     ) {
 
-      const id =
-        obterIdLoja(
+      // ----------------------------------------------
+      // 1. Tenta todos os IDs disponíveis
+      // ----------------------------------------------
+
+      const ids =
+        obterIdsCanal(
           pedido
         );
 
 
-      if (
-        id &&
-        mapaCanais.has(id)
+      for (
+        const id of ids
       ) {
 
-        return mapaCanais.get(
-          id
-        );
+        if (
+          mapaCanais.has(
+            id
+          )
+        ) {
+
+          const nome =
+            mapaCanais.get(
+              id
+            );
+
+
+          if (
+            nome &&
+            nome !== "Bling" &&
+            nome !== "Outros"
+          ) {
+
+            return nome;
+
+          }
+
+        }
 
       }
 
 
-      const nome =
-        obterNomePedido(
+      // ----------------------------------------------
+      // 2. Tenta o nome que veio no pedido
+      // ----------------------------------------------
+
+      const nomePedido =
+        obterNomeCanalPedido(
           pedido
         );
 
 
+      const nomeNormalizado =
+        normalizarMarketplace(
+          nomePedido
+        );
+
+
       if (
-        nome
+        nomeNormalizado !==
+          "Outros" &&
+        nomeNormalizado !==
+          "Bling"
       ) {
 
-        return normalizarMarketplace(
-          nome
-        );
+        return nomeNormalizado;
 
       }
 
 
-      return "Outros";
+      // ----------------------------------------------
+      // 3. Se o canal for Bling,
+      // tenta outros campos do pedido
+      // ----------------------------------------------
+
+      const camposTexto = [
+
+        pedido?.numeroLoja,
+
+        pedido?.numeroPedidoLoja,
+
+        pedido?.origem,
+
+        pedido?.origemPedido,
+
+        pedido?.integracao,
+
+        pedido?.integracao?.nome,
+
+        pedido?.integracao?.descricao
+
+      ];
+
+
+      for (
+        const campo
+        of camposTexto
+      ) {
+
+        if (
+          typeof campo !==
+          "string"
+        ) {
+
+          continue;
+
+        }
+
+
+        const nome =
+          normalizarMarketplace(
+            campo
+          );
+
+
+        if (
+          nome !== "Outros" &&
+          nome !== "Bling"
+        ) {
+
+          return nome;
+
+        }
+
+      }
+
+
+      return (
+        nomeNormalizado ||
+        "Outros"
+      );
 
     }
 
@@ -1175,6 +1497,11 @@ export default async function handler(req, res) {
           total:
             obterValorPedido(
               pedido
+            ),
+
+          dataPainel:
+            obterDataPedido(
+              pedido
             )
 
         })
@@ -1182,20 +1509,129 @@ export default async function handler(req, res) {
 
 
     // ========================================================
-    // PEDIDOS DE HOJE
+    // RESUMO DE HOJE
     // ========================================================
 
     const pedidosHoje =
       pedidosProcessados.filter(
         pedido =>
-          obterDataPedido(
-            pedido
-          ) === hojeStr
+          pedido.dataPainel ===
+          hojeStr
+      );
+
+
+    const faturamentoHoje =
+      pedidosHoje.reduce(
+        (
+          total,
+          pedido
+        ) =>
+          total +
+          pedido.total,
+        0
       );
 
 
     // ========================================================
-    // FATURAMENTO POR MARKETPLACE
+    // ONTEM
+    // ========================================================
+
+    const pedidosOntem =
+      pedidosProcessados.filter(
+        pedido =>
+          pedido.dataPainel ===
+          ontemStr
+      );
+
+
+    const faturamentoOntem =
+      pedidosOntem.reduce(
+        (
+          total,
+          pedido
+        ) =>
+          total +
+          pedido.total,
+        0
+      );
+
+
+    // ========================================================
+    // PERÍODO
+    // ========================================================
+
+    function calcularPeriodo(
+      inicio
+    ) {
+
+      const lista =
+        pedidosProcessados.filter(
+          pedido => {
+
+            const data =
+              pedido.dataPainel;
+
+
+            if (!data) {
+
+              return false;
+
+            }
+
+
+            return (
+              data >= inicio &&
+              data <= hojeStr
+            );
+
+          }
+        );
+
+
+      const faturamento =
+        lista.reduce(
+          (
+            total,
+            pedido
+          ) =>
+            total +
+            pedido.total,
+          0
+        );
+
+
+      return {
+
+        faturamento,
+
+        pedidos:
+          lista.length
+
+      };
+
+    }
+
+
+    const periodo7 =
+      calcularPeriodo(
+        inicio7Str
+      );
+
+
+    const periodo15 =
+      calcularPeriodo(
+        inicio15Str
+      );
+
+
+    const periodo30 =
+      calcularPeriodo(
+        inicio30Str
+      );
+
+
+    // ========================================================
+    // MARKETPLACES
     // ========================================================
 
     const mapaMarketplace =
@@ -1203,7 +1639,8 @@ export default async function handler(req, res) {
 
 
     for (
-      const pedido of pedidosProcessados
+      const pedido
+      of pedidosProcessados
     ) {
 
       const marketplace =
@@ -1212,9 +1649,7 @@ export default async function handler(req, res) {
 
 
       const valor =
-        obterValorPedido(
-          pedido
-        );
+        pedido.total || 0;
 
 
       if (
@@ -1237,7 +1672,6 @@ export default async function handler(req, res) {
               0
 
           }
-
         );
 
       }
@@ -1253,8 +1687,7 @@ export default async function handler(req, res) {
         valor;
 
 
-      item.pedidos +=
-        1;
+      item.pedidos += 1;
 
     }
 
@@ -1274,130 +1707,59 @@ export default async function handler(req, res) {
 
 
     // ========================================================
-    // PERÍODOS
+    // PRODUTOS
     // ========================================================
 
-    function calcularPeriodo(
-      inicio
+    const produtosMap =
+      new Map();
+
+
+    for (
+      const pedido
+      of pedidosProcessados
     ) {
 
-      const lista =
-        pedidosProcessados.filter(
-          pedido => {
-
-            const data =
-              obterDataPedido(
-                pedido
-              );
+      const itens =
+        Array.isArray(
+          pedido?.itens
+        )
+          ? pedido.itens
+          : [];
 
 
-            return (
-              data >= inicio &&
-              data <= hojeStr
-            );
+      for (
+        const item
+        of itens
+      ) {
 
-          }
-        );
+        const id =
+          item?.produto?.id ||
+          item?.id ||
+          item?.codigo ||
+          item?.descricao;
 
 
-      return {
+        if (
+          id !== undefined &&
+          id !== null
+        ) {
 
-        faturamento:
-          lista.reduce(
-            (
-              total,
-              pedido
-            ) =>
-              total +
-              obterValorPedido(
-                pedido
-              ),
-            0
-          ),
+          produtosMap.set(
+            String(id),
+            item
+          );
 
-        pedidos:
-          lista.length
+        }
 
-      };
+      }
 
     }
 
 
-    const periodoOntem =
-      pedidosProcessados.filter(
-        pedido =>
-          obterDataPedido(
-            pedido
-          ) === ontemStr
+    const produtos =
+      Array.from(
+        produtosMap.values()
       );
-
-
-    const ontemFaturamento =
-      periodoOntem.reduce(
-        (
-          total,
-          pedido
-        ) =>
-          total +
-          obterValorPedido(
-            pedido
-          ),
-        0
-      );
-
-
-    const periodo7 =
-      calcularPeriodo(
-        inicio7Str
-      );
-
-
-    const periodo15 =
-      calcularPeriodo(
-        inicio15Str
-      );
-
-
-    const periodo30 =
-      calcularPeriodo(
-        inicio30Str
-      );
-
-
-    const periodos = {
-
-      ontem: {
-
-        faturamento:
-          ontemFaturamento,
-
-        pedidos:
-          periodoOntem.length
-
-      },
-
-      ultimos7:
-        periodo7,
-
-      ultimos15:
-        periodo15,
-
-      ultimos30:
-        periodo30,
-
-      // Compatibilidade
-      // com o frontend antigo.
-
-      seteDias:
-        periodo7,
-
-      quinzeDias:
-        periodo15,
-
-      trintaDias:
-        periodo30
-
-    };
 
 
     // ========================================================
@@ -1413,24 +1775,49 @@ export default async function handler(req, res) {
           ) => {
 
             const dataA =
-              obterDataPedido(
-                a
-              );
+              a.dataPainel ||
+              "";
 
             const dataB =
-              obterDataPedido(
-                b
+              b.dataPainel ||
+              "";
+
+
+            if (
+              dataA !==
+              dataB
+            ) {
+
+              return dataB.localeCompare(
+                dataA
               );
 
-            return dataB.localeCompare(
-              dataA
-            );
+            }
+
+
+            const idA =
+              Number(
+                a.id ||
+                a.numero ||
+                0
+              );
+
+
+            const idB =
+              Number(
+                b.id ||
+                b.numero ||
+                0
+              );
+
+
+            return idB - idA;
 
           }
         )
         .slice(
           0,
-          50
+          20
         )
         .map(
           pedido => ({
@@ -1454,14 +1841,12 @@ export default async function handler(req, res) {
               "Outros",
 
             total:
-              obterValorPedido(
-                pedido
-              ),
+              pedido?.total ||
+              0,
 
             data:
-              obterDataPedido(
-                pedido
-              )
+              pedido?.dataPainel ||
+              ""
 
           })
         );
@@ -1475,24 +1860,114 @@ export default async function handler(req, res) {
 
       success: true,
 
-      produtos: [],
+      // ----------------------------------------------
+      // RESUMO
+      // ----------------------------------------------
+
+      faturamentoHoje,
+
+      pedidosHoje:
+        pedidosHoje.length,
+
+      produtos,
+
+      totalProdutos:
+        produtos.length,
 
       pedidos:
         pedidosProcessados,
 
-      pedidosHoje,
+      totalPedidos:
+        pedidosProcessados.length,
+
+      // ----------------------------------------------
+      // PERÍODOS
+      // ----------------------------------------------
+
+      periodos: {
+
+        ontem: {
+
+          faturamento:
+            faturamentoOntem,
+
+          pedidos:
+            pedidosOntem.length
+
+        },
+
+        ultimos7: {
+
+          faturamento:
+            periodo7.faturamento,
+
+          pedidos:
+            periodo7.pedidos
+
+        },
+
+        ultimos15: {
+
+          faturamento:
+            periodo15.faturamento,
+
+          pedidos:
+            periodo15.pedidos
+
+        },
+
+        ultimos30: {
+
+          faturamento:
+            periodo30.faturamento,
+
+          pedidos:
+            periodo30.pedidos
+
+        }
+
+      },
+
+      // ----------------------------------------------
+      // MARKETPLACES
+      // ----------------------------------------------
 
       marketplaces,
 
-      periodos,
+      // ----------------------------------------------
+      // ÚLTIMOS PEDIDOS
+      // ----------------------------------------------
 
       ultimosPedidos,
 
-      totalProdutos:
-        0,
+      // ----------------------------------------------
+      // INFORMAÇÕES DE DEBUG
+      // ----------------------------------------------
 
-      totalPedidos:
-        pedidosProcessados.length,
+      debug: {
+
+        hoje:
+          hojeStr,
+
+        ontem:
+          ontemStr,
+
+        inicio7:
+          inicio7Str,
+
+        inicio15:
+          inicio15Str,
+
+        inicio30:
+          inicio30Str,
+
+        pedidosCarregados:
+          todosPedidos.length,
+
+        canaisEncontrados:
+          mapaCanais.size
+
+      },
 
       atualizadoEm:
         new Date().toISOString()
@@ -1501,7 +1976,7 @@ export default async function handler(req, res) {
 
 
     // ========================================================
-    // CACHE
+    // SALVAR CACHE
     // ========================================================
 
     cacheDados.set(
@@ -1517,6 +1992,10 @@ export default async function handler(req, res) {
       }
     );
 
+
+    // ========================================================
+    // RETORNAR
+    // ========================================================
 
     return res.status(
       200
