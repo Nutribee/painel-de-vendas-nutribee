@@ -55,6 +55,7 @@
       padding: 12px 18px;
       cursor: pointer;
       font-weight: bold;
+      font-size: 16px;
     }
 
     .btn-principal {
@@ -69,7 +70,7 @@
 
     .status {
       background: white;
-      padding: 12px;
+      padding: 14px;
       border-radius: 8px;
       margin-bottom: 20px;
       border-left: 5px solid #159447;
@@ -84,37 +85,38 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 15px;
-      margin-bottom: 25px;
+      margin-bottom: 30px;
     }
 
     .card {
       background: white;
       border-radius: 12px;
-      padding: 20px;
+      padding: 25px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
 
     .card span {
       display: block;
       color: #777;
-      font-size: 14px;
-      margin-bottom: 8px;
+      font-size: 16px;
+      margin-bottom: 10px;
     }
 
     .card strong {
-      font-size: 25px;
+      font-size: 30px;
     }
 
-    /* ==============================
+    /* ==========================
        MARKETPLACES
-    ============================== */
+    ========================== */
 
     .marketplaces-container {
       margin-bottom: 25px;
     }
 
     .marketplaces-container h2 {
-      margin-bottom: 15px;
+      margin-bottom: 18px;
+      font-size: 28px;
     }
 
     .marketplaces {
@@ -126,26 +128,26 @@
     .marketplace-card {
       background: white;
       border-radius: 12px;
-      padding: 20px;
+      padding: 22px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
       border-top: 5px solid #159447;
     }
 
     .marketplace-nome {
-      font-size: 18px;
+      font-size: 20px;
       font-weight: bold;
       margin-bottom: 15px;
     }
 
     .marketplace-faturamento {
-      font-size: 25px;
+      font-size: 27px;
       font-weight: bold;
       margin-bottom: 8px;
     }
 
     .marketplace-pedidos {
       color: #777;
-      font-size: 14px;
+      font-size: 15px;
     }
 
     .sem-marketplaces {
@@ -156,6 +158,30 @@
       text-align: center;
     }
 
+    /* ==========================
+       TOTAL DOS MARKETPLACES
+    ========================== */
+
+    .total-marketplaces {
+      background: #159447;
+      color: white;
+      border-radius: 12px;
+      padding: 22px;
+      margin-top: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+    }
+
+    .total-marketplaces span {
+      display: block;
+      font-size: 16px;
+      opacity: 0.9;
+      margin-bottom: 8px;
+    }
+
+    .total-marketplaces strong {
+      font-size: 30px;
+    }
+
     @media (max-width: 600px) {
 
       .container {
@@ -163,15 +189,27 @@
       }
 
       header h1 {
-        font-size: 20px;
-      }
-
-      .card strong {
         font-size: 21px;
       }
 
+      .card {
+        padding: 20px;
+      }
+
+      .card strong {
+        font-size: 25px;
+      }
+
+      .marketplaces-container h2 {
+        font-size: 24px;
+      }
+
       .marketplace-faturamento {
-        font-size: 22px;
+        font-size: 24px;
+      }
+
+      .total-marketplaces strong {
+        font-size: 27px;
       }
 
     }
@@ -179,6 +217,7 @@
   </style>
 
 </head>
+
 
 <body>
 
@@ -196,9 +235,9 @@
 <div class="container">
 
 
-  <!-- ==============================
+  <!-- ==========================
        BOTÕES
-  =============================== -->
+  ========================== -->
 
   <div class="acoes">
 
@@ -220,9 +259,9 @@
   </div>
 
 
-  <!-- ==============================
+  <!-- ==========================
        STATUS
-  =============================== -->
+  ========================== -->
 
   <div
     id="status"
@@ -232,9 +271,9 @@
   </div>
 
 
-  <!-- ==============================
+  <!-- ==========================
        RESUMO
-  =============================== -->
+  ========================== -->
 
   <div class="cards">
 
@@ -294,12 +333,11 @@
   </div>
 
 
-  <!-- ==============================
+  <!-- ==========================
        FATURAMENTO POR MARKETPLACE
-  =============================== -->
+  ========================== -->
 
   <div class="marketplaces-container">
-
 
     <h2>
       💰 Faturamento por marketplace
@@ -312,13 +350,25 @@
     >
 
       <div class="sem-marketplaces">
-
         Nenhum marketplace carregado.
-
       </div>
 
     </div>
 
+
+    <!-- TOTAL -->
+
+    <div class="total-marketplaces">
+
+      <span>
+        Faturamento total dos marketplaces
+      </span>
+
+      <strong id="totalMarketplaces">
+        R$ 0,00
+      </strong>
+
+    </div>
 
   </div>
 
@@ -334,7 +384,6 @@
 ===================================================== */
 
 async function carregarDadosBling() {
-
 
   const status =
     document.getElementById("status");
@@ -387,8 +436,36 @@ async function carregarDadosBling() {
       );
 
 
-    const dados =
-      await resposta.json();
+    /*
+      Lê primeiro como texto.
+      Isso evita o erro:
+      Unexpected token 'A'
+    */
+
+    const texto =
+      await resposta.text();
+
+
+    let dados;
+
+
+    try {
+
+      dados =
+        JSON.parse(texto);
+
+    } catch (erroJson) {
+
+      console.error(
+        "Resposta recebida do servidor:",
+        texto
+      );
+
+      throw new Error(
+        "O servidor não retornou JSON válido."
+      );
+
+    }
 
 
     if (
@@ -405,15 +482,21 @@ async function carregarDadosBling() {
 
 
     const produtos =
-      dados.produtos || [];
+      Array.isArray(dados.produtos)
+        ? dados.produtos
+        : [];
 
 
     const pedidos =
-      dados.pedidos || [];
+      Array.isArray(dados.pedidos)
+        ? dados.pedidos
+        : [];
 
 
     const marketplaces =
-      dados.marketplaces || [];
+      Array.isArray(dados.marketplaces)
+        ? dados.marketplaces
+        : [];
 
 
     atualizarPainel(
@@ -433,12 +516,9 @@ async function carregarDadosBling() {
 
   } catch (erro) {
 
-
     console.error(erro);
 
-
     status.classList.add("erro");
-
 
     status.innerText =
       "❌ Erro ao carregar dados: " +
@@ -457,7 +537,6 @@ function atualizarPainel(
   produtos,
   pedidos
 ) {
-
 
   let faturamento = 0;
 
@@ -483,8 +562,7 @@ function atualizarPainel(
 
   const ticketMedio =
     quantidadePedidos > 0
-      ? faturamento /
-        quantidadePedidos
+      ? faturamento / quantidadePedidos
       : 0;
 
 
@@ -519,6 +597,119 @@ function atualizarPainel(
 
 
 /* =====================================================
+   NOMES DOS MARKETPLACES
+===================================================== */
+
+function nomeMarketplace(
+  marketplace
+) {
+
+  const nomeOriginal =
+    String(
+      marketplace.nome || ""
+    ).trim();
+
+
+  const id =
+    String(
+      marketplace.id ||
+      marketplace.canal_id ||
+      marketplace.codigo ||
+      ""
+    ).trim();
+
+
+  const texto =
+    (
+      nomeOriginal +
+      " " +
+      id
+    ).toLowerCase();
+
+
+  /*
+    Se o Bling já mandar o nome,
+    mantém o nome.
+  */
+
+  if (
+    texto.includes("mercado livre") ||
+    texto.includes("mercadolivre")
+  ) {
+
+    return "Mercado Livre";
+
+  }
+
+
+  if (
+    texto.includes("shopee")
+  ) {
+
+    return "Shopee";
+
+  }
+
+
+  if (
+    texto.includes("tiktok")
+  ) {
+
+    return "TikTok Shop";
+
+  }
+
+
+  if (
+    texto.includes("amazon")
+  ) {
+
+    return "Amazon";
+
+  }
+
+
+  /*
+    IDs dos canais da Nutribee
+  */
+
+  if (id === "204824338") {
+
+    return "Mercado Livre";
+
+  }
+
+
+  if (id === "205972730") {
+
+    return "Shopee";
+
+  }
+
+
+  if (id === "205413635") {
+
+    return "TikTok Shop";
+
+  }
+
+
+  if (id === "205227624") {
+
+    return "Amazon";
+
+  }
+
+
+  return (
+    nomeOriginal ||
+    "Marketplace"
+  );
+
+}
+
+
+/* =====================================================
    FATURAMENTO POR MARKETPLACE
 ===================================================== */
 
@@ -526,224 +717,6 @@ function atualizarMarketplaces(
   marketplaces
 ) {
 
-
   const container =
     document.getElementById(
-      "marketplaces"
-    );
-
-
-  if (
-    !marketplaces ||
-    marketplaces.length === 0
-  ) {
-
-
-    container.innerHTML = `
-
-      <div class="sem-marketplaces">
-
-        Nenhum marketplace encontrado
-        nos pedidos de hoje.
-
-      </div>
-
-    `;
-
-
-    return;
-
-  }
-
-
-  container.innerHTML =
-    marketplaces
-      .map(
-        marketplace => {
-
-
-          const nome =
-            marketplace.nome ||
-            "Marketplace";
-
-
-          const faturamento =
-            Number(
-              marketplace.faturamento ||
-              0
-            );
-
-
-          const pedidos =
-            Number(
-              marketplace.pedidos ||
-              0
-            );
-
-
-          return `
-
-            <div class="marketplace-card">
-
-              <div class="marketplace-nome">
-
-                🛒 ${escaparHtml(nome)}
-
-              </div>
-
-
-              <div class="marketplace-faturamento">
-
-                ${formatarMoeda(faturamento)}
-
-              </div>
-
-
-              <div class="marketplace-pedidos">
-
-                ${pedidos}
-
-                ${
-                  pedidos === 1
-                    ? "pedido"
-                    : "pedidos"
-                }
-
-              </div>
-
-            </div>
-
-          `;
-
-        }
-      )
-      .join("");
-
-}
-
-
-/* =====================================================
-   FORMATAÇÃO DE MOEDA
-===================================================== */
-
-function formatarMoeda(
-  valor
-) {
-
-
-  return Number(
-    valor || 0
-  ).toLocaleString(
-    "pt-BR",
-    {
-
-      style: "currency",
-
-      currency: "BRL"
-
-    }
-  );
-
-}
-
-
-/* =====================================================
-   PROTEÇÃO CONTRA HTML
-===================================================== */
-
-function escaparHtml(
-  valor
-) {
-
-
-  return String(
-    valor ?? ""
-  )
-
-    .replaceAll(
-      "&",
-      "&amp;"
-    )
-
-    .replaceAll(
-      "<",
-      "&lt;"
-    )
-
-    .replaceAll(
-      ">",
-      "&gt;"
-    )
-
-    .replaceAll(
-      '"',
-      "&quot;"
-    )
-
-    .replaceAll(
-      "'",
-      "&#039;"
-    );
-
-}
-
-
-/* =====================================================
-   CONECTAR BLING
-===================================================== */
-
-function autorizarBling() {
-
-
-  const clientId =
-    "1c91f534729d1b705ae2229ea4ac0c345ce37cc7";
-
-
-  const state =
-    crypto.randomUUID();
-
-
-  localStorage.setItem(
-    "bling_oauth_state",
-    state
-  );
-
-
-  const url =
-    "https://www.bling.com.br/Api/v3/oauth/authorize" +
-
-    "?response_type=code" +
-
-    "&client_id=" +
-
-    encodeURIComponent(
-      clientId
-    ) +
-
-    "&state=" +
-
-    encodeURIComponent(
-      state
-    );
-
-
-  window.location.href =
-    url;
-
-}
-
-
-/* =====================================================
-   NÃO CARREGAR AUTOMATICAMENTE
-===================================================== */
-
-// Os dados serão carregados
-// quando você clicar em:
-// 🔄 Atualizar Bling
-
-
-</script>
-
-</body>
-
-</html>
+      "market
