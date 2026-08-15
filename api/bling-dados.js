@@ -283,7 +283,7 @@ export default async function handler(req, res) {
 
 
     // -----------------------------------------------------
-    // PRIMEIRO: tenta usar canalVenda que já veio no pedido
+    // PRIMEIRO: canalVenda que já veio no pedido
     // -----------------------------------------------------
 
     for (const pedido of todosPedidos) {
@@ -377,9 +377,6 @@ export default async function handler(req, res) {
 
     // =====================================================
     // TERCEIRO: BUSCAR DETALHES DE ALGUNS PEDIDOS
-    //
-    // Isso é importante porque o pedido resumido pode trazer
-    // apenas loja.id.
     // =====================================================
 
     const lojasComPedido = {};
@@ -435,7 +432,7 @@ export default async function handler(req, res) {
 
 
       // -----------------------------------------------
-      // Procura canalVenda no pedido detalhado
+      // CanalVenda no pedido detalhado
       // -----------------------------------------------
 
       const canal =
@@ -474,7 +471,7 @@ export default async function handler(req, res) {
 
 
       // -----------------------------------------------
-      // Caso o próprio detalhe tenha nome da loja
+      // Nome da própria loja
       // -----------------------------------------------
 
       if (detalhe?.loja?.id) {
@@ -491,17 +488,13 @@ export default async function handler(req, res) {
 
         if (nomeLoja) {
 
-          if (!canais[`loja_${idLoja}`]) {
+          canais[`loja_${idLoja}`] = {
 
-            canais[`loja_${idLoja}`] = {
+            id: idLoja,
 
-              id: idLoja,
+            nome: nomeLoja
 
-              nome: nomeLoja
-
-            };
-
-          }
+          };
 
         }
 
@@ -572,14 +565,55 @@ export default async function handler(req, res) {
 
 
     // =====================================================
-    // FUNÇÃO PARA DESCOBRIR O NOME DO MARKETPLACE
+    // FUNÇÃO PARA DESCOBRIR O MARKETPLACE
     // =====================================================
 
     function descobrirMarketplace(pedido) {
 
-      // -----------------------------------------------
-      // 1. Canal de venda direto
-      // -----------------------------------------------
+      // =================================================
+      // MAPA FIXO DOS MARKETPLACES DA NUTRIBEE
+      // =================================================
+
+      const mapaMarketplaces = {
+
+        "204824338": "Mercado Livre",
+
+        "205972730": "Shopee",
+
+        "205413635": "TikTok Shop",
+
+        "205227624": "Amazon"
+
+      };
+
+
+      // =================================================
+      // PRIMEIRO: verifica o ID DA LOJA
+      // =================================================
+
+      const idLoja =
+        pedido?.loja?.id;
+
+      if (
+        idLoja !== undefined &&
+        idLoja !== null
+      ) {
+
+        const id =
+          String(idLoja);
+
+        if (mapaMarketplaces[id]) {
+
+          return mapaMarketplaces[id];
+
+        }
+
+      }
+
+
+      // =================================================
+      // SEGUNDO: verifica o ID DO CANAL
+      // =================================================
 
       const canal =
         pedido?.canalVenda ||
@@ -588,6 +622,24 @@ export default async function handler(req, res) {
 
 
       if (canal) {
+
+        const idCanal =
+          canal?.id !== undefined &&
+          canal?.id !== null
+            ? String(canal.id)
+            : null;
+
+
+        // Verifica o mapa fixo
+        if (
+          idCanal &&
+          mapaMarketplaces[idCanal]
+        ) {
+
+          return mapaMarketplaces[idCanal];
+
+        }
+
 
         const nomeCanal =
           canal.nome ||
@@ -602,24 +654,21 @@ export default async function handler(req, res) {
         }
 
 
-        if (canal.id) {
+        if (
+          idCanal &&
+          canais[idCanal]?.nome
+        ) {
 
-          const idCanal =
-            String(canal.id);
-
-
-          if (canais[idCanal]?.nome) {
-            return canais[idCanal].nome;
-          }
+          return canais[idCanal].nome;
 
         }
 
       }
 
 
-      // -----------------------------------------------
-      // 2. Loja
-      // -----------------------------------------------
+      // =================================================
+      // TERCEIRO: NOME DA LOJA
+      // =================================================
 
       const loja =
         pedido?.loja;
@@ -641,13 +690,15 @@ export default async function handler(req, res) {
 
         if (loja.id) {
 
-          const idLoja =
+          const id =
             String(loja.id);
 
 
-          if (canais[`loja_${idLoja}`]?.nome) {
+          if (
+            canais[`loja_${id}`]?.nome
+          ) {
 
-            return canais[`loja_${idLoja}`].nome;
+            return canais[`loja_${id}`].nome;
 
           }
 
@@ -656,9 +707,9 @@ export default async function handler(req, res) {
       }
 
 
-      // -----------------------------------------------
-      // 3. Número da loja / integração
-      // -----------------------------------------------
+      // =================================================
+      // QUARTO: numeroLoja
+      // =================================================
 
       if (pedido?.numeroLoja) {
 
@@ -672,7 +723,9 @@ export default async function handler(req, res) {
           numero.includes("mercado livre") ||
           numero.includes("meli")
         ) {
+
           return "Mercado Livre";
+
         }
 
 
@@ -680,41 +733,43 @@ export default async function handler(req, res) {
           numero.includes("tiktok") ||
           numero.includes("tik tok")
         ) {
+
           return "TikTok Shop";
+
         }
 
 
         if (
           numero.includes("shopee")
         ) {
+
           return "Shopee";
+
         }
 
 
         if (
           numero.includes("amazon")
         ) {
+
           return "Amazon";
+
         }
 
       }
 
 
-      // -----------------------------------------------
-      // 4. Detalhe salvo por loja
-      // -----------------------------------------------
-
-      const lojaId =
-        pedido?.loja?.id;
-
+      // =================================================
+      // QUINTO: DETALHE DO PEDIDO
+      // =================================================
 
       if (
-        lojaId !== undefined &&
-        lojaId !== null
+        idLoja !== undefined &&
+        idLoja !== null
       ) {
 
         const detalhe =
-          detalhesPorLoja[String(lojaId)];
+          detalhesPorLoja[String(idLoja)];
 
 
         if (detalhe) {
@@ -726,6 +781,23 @@ export default async function handler(req, res) {
 
 
           if (canalDetalhe) {
+
+            const idCanalDetalhe =
+              canalDetalhe?.id !== undefined &&
+              canalDetalhe?.id !== null
+                ? String(canalDetalhe.id)
+                : null;
+
+
+            if (
+              idCanalDetalhe &&
+              mapaMarketplaces[idCanalDetalhe]
+            ) {
+
+              return mapaMarketplaces[idCanalDetalhe];
+
+            }
+
 
             const nome =
               canalDetalhe.nome ||
@@ -740,15 +812,12 @@ export default async function handler(req, res) {
             }
 
 
-            if (canalDetalhe.id) {
+            if (
+              idCanalDetalhe &&
+              canais[idCanalDetalhe]?.nome
+            ) {
 
-              const id =
-                String(canalDetalhe.id);
-
-
-              if (canais[id]?.nome) {
-                return canais[id].nome;
-              }
+              return canais[idCanalDetalhe].nome;
 
             }
 
@@ -759,16 +828,16 @@ export default async function handler(req, res) {
       }
 
 
-      // -----------------------------------------------
-      // 5. Último recurso
-      // -----------------------------------------------
+      // =================================================
+      // ÚLTIMO RECURSO
+      // =================================================
 
       if (
-        lojaId !== undefined &&
-        lojaId !== null
+        idLoja !== undefined &&
+        idLoja !== null
       ) {
 
-        return `Canal ${lojaId}`;
+        return `Canal ${idLoja}`;
 
       }
 
