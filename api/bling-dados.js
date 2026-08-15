@@ -1,18 +1,11 @@
 // ============================================================
 // PAINEL DE VENDAS NUTRIBEE - BLING
-// VERSÃO CORRIGIDA E OTIMIZADA
-//
-// - Busca pedidos dos últimos 30 dias
-// - Identifica marketplace através do canal/loja do Bling
-// - Não usa ID fixo de marketplace
-// - Consulta cada canal apenas uma vez
-// - Cache dos canais por 1 hora
-// - Cache dos dados por 2 minutos
-// - Controle de requisições para evitar HTTP 429
+// MARKETPLACES + VENDAS + PERÍODOS
 // ============================================================
 
 const CACHE_DADOS_TTL = 2 * 60 * 1000;
 const CACHE_CANAIS_TTL = 60 * 60 * 1000;
+const INTERVALO = 400;
 
 const cacheDados =
   globalThis.__blingCacheDados ||
@@ -25,6 +18,18 @@ const cacheCanais =
   new Map();
 
 globalThis.__blingCacheCanais = cacheCanais;
+
+
+// ============================================================
+// MARKETPLACES DA CONTA NUTRIBEE
+// ============================================================
+
+const MARKETPLACES_FIXOS = new Map([
+  ["204824338", "Mercado Livre"],
+  ["205972730", "Shopee"],
+  ["205413635", "TikTok Shop"],
+  ["205227624", "Amazon"]
+]);
 
 
 // ============================================================
@@ -66,7 +71,7 @@ export default async function handler(req, res) {
 
 
     // ========================================================
-    // CACHE DOS DADOS
+    // CACHE
     // ========================================================
 
     const cacheKey =
@@ -79,7 +84,8 @@ export default async function handler(req, res) {
     if (
       !forceRefresh &&
       cacheAtual &&
-      Date.now() - cacheAtual.timestamp <
+      Date.now() -
+        cacheAtual.timestamp <
         CACHE_DADOS_TTL
     ) {
 
@@ -115,8 +121,6 @@ export default async function handler(req, res) {
     // ========================================================
     // CONTROLE DE REQUISIÇÕES
     // ========================================================
-
-    const INTERVALO = 400;
 
     let ultimaRequisicao = 0;
 
@@ -155,7 +159,7 @@ export default async function handler(req, res) {
 
 
     // ========================================================
-    // FUNÇÃO PRINCIPAL PARA CONSULTAR O BLING
+    // CONSULTAR BLING
     // ========================================================
 
     async function buscarBling(
@@ -428,7 +432,7 @@ export default async function handler(req, res) {
 
 
     // ========================================================
-    // DATA DO BRASIL
+    // DATAS
     // ========================================================
 
     function hojeBrasil() {
@@ -436,6 +440,7 @@ export default async function handler(req, res) {
       return new Intl.DateTimeFormat(
         "en-CA",
         {
+
           timeZone:
             "America/Sao_Paulo",
 
@@ -447,16 +452,13 @@ export default async function handler(req, res) {
 
           day:
             "2-digit"
+
         }
       ).format(
         new Date()
       );
 
     }
-
-
-    const hojeStr =
-      hojeBrasil();
 
 
     function diminuirDias(
@@ -484,6 +486,10 @@ export default async function handler(req, res) {
         );
 
     }
+
+
+    const hojeStr =
+      hojeBrasil();
 
 
     const ontemStr =
@@ -576,9 +582,7 @@ export default async function handler(req, res) {
         Array.isArray(
           resposta.data?.data
         )
-
           ? resposta.data.data
-
           : [];
 
 
@@ -675,7 +679,7 @@ export default async function handler(req, res) {
 
 
     // ========================================================
-    // ID DA LOJA / CANAL
+    // ID DA LOJA
     // ========================================================
 
     function obterIdLoja(
@@ -684,21 +688,21 @@ export default async function handler(req, res) {
 
       const ids = [
 
-        pedido?.loja?.id,
-
         pedido?.canalVenda?.id,
 
         pedido?.canal?.id,
 
         pedido?.marketplace?.id,
 
-        pedido?.lojaId,
+        pedido?.loja?.id,
 
         pedido?.canalVendaId,
 
         pedido?.canalId,
 
-        pedido?.marketplaceId
+        pedido?.marketplaceId,
+
+        pedido?.lojaId
 
       ];
 
@@ -735,10 +739,6 @@ export default async function handler(req, res) {
 
       const nomes = [
 
-        pedido?.loja?.nome,
-
-        pedido?.loja?.descricao,
-
         pedido?.canalVenda?.nome,
 
         pedido?.canalVenda?.descricao,
@@ -751,7 +751,11 @@ export default async function handler(req, res) {
 
         pedido?.marketplace?.nome,
 
-        pedido?.marketplace?.descricao
+        pedido?.marketplace?.descricao,
+
+        pedido?.loja?.nome,
+
+        pedido?.loja?.descricao
 
       ];
 
@@ -812,10 +816,10 @@ export default async function handler(req, res) {
           "mercadolivre"
         ) ||
         texto.includes(
-          "meli"
+          "mercadolibre"
         ) ||
         texto.includes(
-          "mercadolibre"
+          "meli"
         )
       ) {
 
@@ -904,7 +908,31 @@ export default async function handler(req, res) {
       }
 
 
-      return String(nome).trim();
+      if (
+        texto.includes(
+          "americanas"
+        )
+      ) {
+
+        return "Americanas";
+
+      }
+
+
+      if (
+        texto.includes(
+          "casas bahia"
+        )
+      ) {
+
+        return "Casas Bahia";
+
+      }
+
+
+      return String(
+        nome
+      ).trim();
 
     }
 
@@ -914,12 +942,12 @@ export default async function handler(req, res) {
     // ========================================================
 
     const mapaCanais =
-      new Map();
+      new Map(
+        MARKETPLACES_FIXOS
+      );
 
 
-    // ========================================================
-    // PRIMEIRO APROVEITA O NOME QUE JÁ VEIO
-    // ========================================================
+    // Primeiro usa qualquer nome que já venha no pedido.
 
     for (
       const pedido of todosPedidos
@@ -939,7 +967,8 @@ export default async function handler(req, res) {
 
       if (
         id &&
-        nome
+        nome &&
+        !mapaCanais.has(id)
       ) {
 
         mapaCanais.set(
@@ -955,11 +984,7 @@ export default async function handler(req, res) {
 
 
     // ========================================================
-    // BUSCAR TODOS OS IDs DE LOJA
-    //
-    // IMPORTANTE:
-    // Aqui usamos TODOS os pedidos dos 30 dias.
-    // Não somente os pedidos de hoje.
+    // IDS DESCONHECIDOS
     // ========================================================
 
     const idsParaConsultar =
@@ -990,18 +1015,16 @@ export default async function handler(req, res) {
     }
 
 
-    // ========================================================
-    // CONSULTAR CANAIS NO BLING
-    //
-    // Cada canal é consultado uma única vez.
-    // ========================================================
+    // Consulta somente canais que ainda não conhecemos.
 
     for (
       const id of idsParaConsultar
     ) {
 
       const cacheCanal =
-        cacheCanais.get(id);
+        cacheCanais.get(
+          id
+        );
 
 
       if (
@@ -1021,13 +1044,11 @@ export default async function handler(req, res) {
       }
 
 
-      const url =
-        `https://api.bling.com.br/Api/v3/canais-venda/${encodeURIComponent(id)}`;
-
-
       const resposta =
         await buscarBling(
-          url
+
+          `https://api.bling.com.br/Api/v3/canais-venda/${encodeURIComponent(id)}`
+
         );
 
 
@@ -1040,67 +1061,25 @@ export default async function handler(req, res) {
           {};
 
 
-        const nomes = [
-
-          canal?.nome,
-
-          canal?.descricao,
-
-          canal?.nomeCanal,
-
-          canal?.canal?.nome,
-
-          canal?.tipo?.nome,
-
-          canal?.integracao?.nome
-
-        ];
+        const nome =
+          canal?.nome ||
+          canal?.descricao ||
+          canal?.nomeCanal ||
+          canal?.canal?.nome ||
+          canal?.integracao?.nome;
 
 
-        let nomeCanal =
-          null;
-
-
-        for (
-          const nome of nomes
-        ) {
-
-          if (
-            typeof nome ===
-              "string" &&
-            nome.trim()
-          ) {
-
-            nomeCanal =
-              nome.trim();
-
-            break;
-
-          }
-
-        }
-
-
-        if (
-          nomeCanal
-        ) {
-
-          nomeCanal =
-            normalizarMarketplace(
-              nomeCanal
-            );
-
-        } else {
-
-          nomeCanal =
-            "Outros";
-
-        }
+        const nomeFinal =
+          nome
+            ? normalizarMarketplace(
+                nome
+              )
+            : "Outros";
 
 
         mapaCanais.set(
           id,
-          nomeCanal
+          nomeFinal
         );
 
 
@@ -1109,7 +1088,7 @@ export default async function handler(req, res) {
           {
 
             nome:
-              nomeCanal,
+              nomeFinal,
 
             timestamp:
               Date.now()
@@ -1119,9 +1098,6 @@ export default async function handler(req, res) {
         );
 
       } else {
-
-        // Não interrompe o painel inteiro
-        // se um canal específico falhar.
 
         mapaCanais.set(
           id,
@@ -1134,40 +1110,12 @@ export default async function handler(req, res) {
 
 
     // ========================================================
-    // IDENTIFICAÇÃO FINAL
+    // IDENTIFICAR MARKETPLACE
     // ========================================================
 
     function identificarMarketplace(
       pedido
     ) {
-
-      const nomePedido =
-        obterNomePedido(
-          pedido
-        );
-
-
-      if (
-        nomePedido
-      ) {
-
-        const normalizado =
-          normalizarMarketplace(
-            nomePedido
-          );
-
-
-        if (
-          normalizado !==
-          "Outros"
-        ) {
-
-          return normalizado;
-
-        }
-
-      }
-
 
       const id =
         obterIdLoja(
@@ -1187,13 +1135,30 @@ export default async function handler(req, res) {
       }
 
 
+      const nome =
+        obterNomePedido(
+          pedido
+        );
+
+
+      if (
+        nome
+      ) {
+
+        return normalizarMarketplace(
+          nome
+        );
+
+      }
+
+
       return "Outros";
 
     }
 
 
     // ========================================================
-    // ADICIONAR MARKETPLACE AOS PEDIDOS
+    // PROCESSAR PEDIDOS
     // ========================================================
 
     const pedidosProcessados =
@@ -1217,7 +1182,7 @@ export default async function handler(req, res) {
 
 
     // ========================================================
-    // RESUMO DE HOJE
+    // PEDIDOS DE HOJE
     // ========================================================
 
     const pedidosHoje =
@@ -1230,7 +1195,7 @@ export default async function handler(req, res) {
 
 
     // ========================================================
-    // MARKETPLACES
+    // FATURAMENTO POR MARKETPLACE
     // ========================================================
 
     const mapaMarketplace =
@@ -1287,7 +1252,9 @@ export default async function handler(req, res) {
       item.faturamento +=
         valor;
 
-      item.pedidos += 1;
+
+      item.pedidos +=
+        1;
 
     }
 
@@ -1323,6 +1290,7 @@ export default async function handler(req, res) {
                 pedido
               );
 
+
             return (
               data >= inicio &&
               data <= hojeStr
@@ -1332,23 +1300,20 @@ export default async function handler(req, res) {
         );
 
 
-      const faturamento =
-        lista.reduce(
-          (
-            total,
-            pedido
-          ) =>
-            total +
-            obterValorPedido(
-              pedido
-            ),
-          0
-        );
-
-
       return {
 
-        faturamento,
+        faturamento:
+          lista.reduce(
+            (
+              total,
+              pedido
+            ) =>
+              total +
+              obterValorPedido(
+                pedido
+              ),
+            0
+          ),
 
         pedidos:
           lista.length
@@ -1411,93 +1376,28 @@ export default async function handler(req, res) {
 
       },
 
-      ultimos7: {
+      ultimos7:
+        periodo7,
 
-        faturamento:
-          periodo7.faturamento,
+      ultimos15:
+        periodo15,
 
-        pedidos:
-          periodo7.pedidos
+      ultimos30:
+        periodo30,
 
-      },
+      // Compatibilidade
+      // com o frontend antigo.
 
-      ultimos15: {
+      seteDias:
+        periodo7,
 
-        faturamento:
-          periodo15.faturamento,
+      quinzeDias:
+        periodo15,
 
-        pedidos:
-          periodo15.pedidos
-
-      },
-
-      ultimos30: {
-
-        faturamento:
-          periodo30.faturamento,
-
-        pedidos:
-          periodo30.pedidos
-
-      }
+      trintaDias:
+        periodo30
 
     };
-
-
-    // ========================================================
-    // PRODUTOS
-    //
-    // Conta produtos distintos encontrados nos pedidos.
-    // ========================================================
-
-    const produtosMap =
-      new Map();
-
-
-    for (
-      const pedido of pedidosProcessados
-    ) {
-
-      const itens =
-        Array.isArray(
-          pedido?.itens
-        )
-          ? pedido.itens
-          : [];
-
-
-      for (
-        const item of itens
-      ) {
-
-        const id =
-          item?.produto?.id ||
-          item?.id ||
-          item?.codigo ||
-          item?.descricao;
-
-
-        if (
-          id !== undefined &&
-          id !== null
-        ) {
-
-          produtosMap.set(
-            String(id),
-            item
-          );
-
-        }
-
-      }
-
-    }
-
-
-    const produtos =
-      Array.from(
-        produtosMap.values()
-      );
 
 
     // ========================================================
@@ -1522,7 +1422,6 @@ export default async function handler(req, res) {
                 b
               );
 
-
             return dataB.localeCompare(
               dataA
             );
@@ -1531,7 +1430,7 @@ export default async function handler(req, res) {
         )
         .slice(
           0,
-          20
+          50
         )
         .map(
           pedido => ({
@@ -1569,14 +1468,14 @@ export default async function handler(req, res) {
 
 
     // ========================================================
-    // RESPOSTA
+    // RESULTADO
     // ========================================================
 
     const resultado = {
 
       success: true,
 
-      produtos,
+      produtos: [],
 
       pedidos:
         pedidosProcessados,
@@ -1590,7 +1489,7 @@ export default async function handler(req, res) {
       ultimosPedidos,
 
       totalProdutos:
-        produtos.length,
+        0,
 
       totalPedidos:
         pedidosProcessados.length,
@@ -1602,7 +1501,7 @@ export default async function handler(req, res) {
 
 
     // ========================================================
-    // SALVAR CACHE
+    // CACHE
     // ========================================================
 
     cacheDados.set(
