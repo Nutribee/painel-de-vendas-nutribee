@@ -18,225 +18,86 @@ export default async function handler(req, res) {
 
     const headers = {
       Authorization: `Bearer ${access_token}`,
-      Accept: "application/json",
-      "enable-jwt": "1"
+      Accept: "application/json"
     };
 
-    const esperar = (ms) =>
-      new Promise((resolve) => setTimeout(resolve, ms));
+    // =====================================================
+    // FUNÇÕES
+    // =====================================================
 
-    function transformarErro(data, status) {
-      if (typeof data === "string") {
-        return data;
-      }
+    async function buscar(url) {
+      const response = await fetch(url, {
+        method: "GET",
+        headers
+      });
 
-      if (data?.error?.message) {
-        return data.error.message;
-      }
+      const texto = await response.text();
 
-      if (data?.error?.description) {
-        return data.error.description;
-      }
-
-      if (data?.message) {
-        return data.message;
-      }
-
-      if (typeof data?.error === "string") {
-        return data.error;
-      }
+      let data;
 
       try {
-        return `Erro do Bling (HTTP ${status}): ${JSON.stringify(data)}`;
+        data = texto ? JSON.parse(texto) : {};
       } catch {
-        return `Erro do Bling (HTTP ${status})`;
-      }
-    }
-
-    async function buscarBling(url, tentativa = 1) {
-      try {
-        const response = await fetch(url, {
-          method: "GET",
-          headers
-        });
-
-        const texto = await response.text();
-
-        let data = {};
-
-        try {
-          data = texto ? JSON.parse(texto) : {};
-        } catch {
-          data = {
-            error: texto || "Resposta inválida do Bling"
-          };
-        }
-
-        if (response.status === 401) {
-          return {
-            ok: false,
-            status: 401,
-            data: {
-              error:
-                "Access token inválido ou expirado. Conecte o Bling novamente."
-            }
-          };
-        }
-
-        if (response.status === 429) {
-          if (tentativa >= 4) {
-            return {
-              ok: false,
-              status: 429,
-              data: {
-                error:
-                  "Limite de requisições do Bling atingido. Aguarde alguns segundos e tente novamente."
-              }
-            };
-          }
-
-          const retryAfter = Number(
-            response.headers.get("Retry-After")
-          );
-
-          const espera =
-            Number.isFinite(retryAfter) && retryAfter > 0
-              ? retryAfter * 1000
-              : tentativa * 1500;
-
-          await esperar(espera);
-
-          return buscarBling(url, tentativa + 1);
-        }
-
-        if (!response.ok) {
-          return {
-            ok: false,
-            status: response.status,
-            data
-          };
-        }
-
-        return {
-          ok: true,
-          status: response.status,
-          data
+        data = {
+          error: texto || "Resposta inválida do Bling"
         };
+      }
 
-      } catch (error) {
-        if (tentativa >= 3) {
-          return {
-            ok: false,
-            status: 502,
-            data: {
-              error:
-                `Falha de comunicação com o Bling: ${
-                  error.message || "erro desconhecido"
-                }`
-            }
-          };
+      if (!response.ok) {
+        let mensagem = "Erro ao consultar o Bling";
+
+        if (data?.error?.message) {
+          mensagem = data.error.message;
+        } else if (data?.message) {
+          mensagem = data.message;
+        } else if (typeof data?.error === "string") {
+          mensagem = data.error;
         }
 
-        await esperar(tentativa * 1000);
-
-        return buscarBling(url, tentativa + 1);
+        throw new Error(
+          `HTTP ${response.status}: ${mensagem}`
+        );
       }
+
+      return data;
     }
-
-    // =====================================================
-    // DATAS
-    // =====================================================
-
-    const hoje = new Date();
 
     function dataFormatada(data) {
       const ano = data.getFullYear();
-      const mes = String(data.getMonth() + 1).padStart(2, "0");
-      const dia = String(data.getDate()).padStart(2, "0");
+
+      const mes = String(
+        data.getMonth() + 1
+      ).padStart(2, "0");
+
+      const dia = String(
+        data.getDate()
+      ).padStart(2, "0");
 
       return `${ano}-${mes}-${dia}`;
     }
 
-    const hojeStr = dataFormatada(hoje);
-
-    const ontem = new Date(hoje);
-    ontem.setDate(ontem.getDate() - 1);
-
-    const ontemStr = dataFormatada(ontem);
-
-    const inicio7 = new Date(hoje);
-    inicio7.setDate(inicio7.getDate() - 6);
-
-    const inicio15 = new Date(hoje);
-    inicio15.setDate(inicio15.getDate() - 14);
-
-    const inicio30 = new Date(hoje);
-    inicio30.setDate(inicio30.getDate() - 29);
-
-    const inicio7Str = dataFormatada(inicio7);
-    const inicio15Str = dataFormatada(inicio15);
-    const inicio30Str = dataFormatada(inicio30);
-
-    // =====================================================
-    // PEDIDOS DOS ÚLTIMOS 30 DIAS
-    // =====================================================
-
-    const todosPedidos = [];
-
-    const limite = 100;
-    let pagina = 1;
-
-    while (pagina <= 50) {
-      const url =
-        "https://api.bling.com.br/Api/v3/pedidos/vendas" +
-        `?pagina=${pagina}` +
-        `&limite=${limite}` +
-        `&dataInicial=${inicio30Str}` +
-        `&dataFinal=${hojeStr}`;
-
-      const resposta = await buscarBling(url);
-
-      if (!resposta.ok) {
-        return res.status(resposta.status).json({
-          success: false,
-          error: transformarErro(
-            resposta.data,
-            resposta.status
-          ),
-          pagina
-        });
-      }
-
-      const pedidos = Array.isArray(resposta.data?.data)
-        ? resposta.data.data
-        : [];
-
-      todosPedidos.push(...pedidos);
-
-      if (pedidos.length < limite) {
-        break;
-      }
-
-      pagina++;
-
-      // Pequena pausa para não estourar o limite do Bling
-      await esperar(150);
+    function obterDataPedido(pedido) {
+      return String(
+        pedido?.data ||
+        pedido?.dataPedido ||
+        pedido?.dataEmissao ||
+        pedido?.dataInclusao ||
+        ""
+      ).substring(0, 10);
     }
 
-    // =====================================================
-    // PRODUTOS
-    // =====================================================
+    function obterValorPedido(pedido) {
+      const valor = Number(
+        pedido?.total ??
+        pedido?.valor ??
+        pedido?.valorTotal ??
+        pedido?.totalProdutos ??
+        0
+      );
 
-    let produtos = [];
-
-    const respostaProdutos = await buscarBling(
-      "https://api.bling.com.br/Api/v3/produtos?pagina=1&limite=100"
-    );
-
-    if (respostaProdutos.ok) {
-      produtos = Array.isArray(respostaProdutos.data?.data)
-        ? respostaProdutos.data.data
-        : [];
+      return Number.isFinite(valor)
+        ? valor
+        : 0;
     }
 
     // =====================================================
@@ -251,7 +112,8 @@ export default async function handler(req, res) {
     };
 
     function descobrirMarketplace(pedido) {
-      const possiveisIds = [
+
+      const ids = [
         pedido?.loja?.id,
         pedido?.canalVenda?.id,
         pedido?.canal?.id,
@@ -262,15 +124,17 @@ export default async function handler(req, res) {
         pedido?.marketplaceId
       ];
 
-      for (const id of possiveisIds) {
-        const nome = mapaMarketplaces[String(id)];
+      for (const id of ids) {
+
+        const nome =
+          mapaMarketplaces[String(id)];
 
         if (nome) {
           return nome;
         }
       }
 
-      const textos = [
+      const texto = [
         pedido?.loja?.nome,
         pedido?.loja?.descricao,
         pedido?.canalVenda?.nome,
@@ -278,31 +142,29 @@ export default async function handler(req, res) {
         pedido?.canal?.nome,
         pedido?.canal?.descricao,
         pedido?.marketplace?.nome,
-        pedido?.marketplace?.descricao,
-        pedido?.numeroLoja,
-        pedido?.numeroCanal
+        pedido?.marketplace?.descricao
       ]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
 
       if (
-        textos.includes("mercado livre") ||
-        textos.includes("mercadolivre") ||
-        textos.includes("meli")
+        texto.includes("mercado livre") ||
+        texto.includes("mercadolivre") ||
+        texto.includes("meli")
       ) {
         return "Mercado Livre";
       }
 
-      if (textos.includes("shopee")) {
+      if (texto.includes("shopee")) {
         return "Shopee";
       }
 
-      if (textos.includes("tiktok")) {
+      if (texto.includes("tiktok")) {
         return "TikTok Shop";
       }
 
-      if (textos.includes("amazon")) {
+      if (texto.includes("amazon")) {
         return "Amazon";
       }
 
@@ -310,57 +172,144 @@ export default async function handler(req, res) {
     }
 
     // =====================================================
-    // DATA DO PEDIDO
+    // DATAS
     // =====================================================
 
-    function obterDataPedido(pedido) {
-      return String(
-        pedido?.data ||
-        pedido?.dataPedido ||
-        pedido?.dataEmissao ||
-        pedido?.dataInclusao ||
-        ""
-      ).substring(0, 10);
-    }
+    const hoje = new Date();
+
+    const hojeStr =
+      dataFormatada(hoje);
+
+    const ontem = new Date(hoje);
+
+    ontem.setDate(
+      ontem.getDate() - 1
+    );
+
+    const ontemStr =
+      dataFormatada(ontem);
+
+    const inicio7 = new Date(hoje);
+
+    inicio7.setDate(
+      inicio7.getDate() - 6
+    );
+
+    const inicio15 = new Date(hoje);
+
+    inicio15.setDate(
+      inicio15.getDate() - 14
+    );
+
+    const inicio30 = new Date(hoje);
+
+    inicio30.setDate(
+      inicio30.getDate() - 29
+    );
+
+    const inicio7Str =
+      dataFormatada(inicio7);
+
+    const inicio15Str =
+      dataFormatada(inicio15);
+
+    const inicio30Str =
+      dataFormatada(inicio30);
 
     // =====================================================
-    // VALOR DO PEDIDO
+    // PEDIDOS
     // =====================================================
 
-    function obterValorPedido(pedido) {
-      const valores = [
-        pedido?.total,
-        pedido?.valor,
-        pedido?.valorTotal,
-        pedido?.totalProdutos
-      ];
+    const todosPedidos = [];
 
-      for (const valor of valores) {
-        const numero = Number(valor);
+    const limite = 100;
 
-        if (Number.isFinite(numero)) {
-          return numero;
-        }
+    let pagina = 1;
+
+    /*
+      Mantemos até 50 páginas porque você informou
+      que pode ter quase 1.000 pedidos por dia.
+
+      Mas não fazemos pausas artificiais entre páginas.
+      Isso deixa a consulta muito mais rápida.
+    */
+
+    while (pagina <= 50) {
+
+      const url =
+        "https://api.bling.com.br/Api/v3/pedidos/vendas" +
+        `?pagina=${pagina}` +
+        `&limite=${limite}` +
+        `&dataInicial=${inicio30Str}` +
+        `&dataFinal=${hojeStr}`;
+
+      const resposta =
+        await buscar(url);
+
+      const pedidos =
+        Array.isArray(
+          resposta?.data
+        )
+          ? resposta.data
+          : [];
+
+      todosPedidos.push(
+        ...pedidos
+      );
+
+      if (
+        pedidos.length < limite
+      ) {
+        break;
       }
 
-      return 0;
+      pagina++;
     }
 
     // =====================================================
-    // CALCULAR PERÍODO
+    // PRODUTOS
     // =====================================================
 
-    function calcularPeriodo(dataInicial) {
+    /*
+      Não vamos buscar produtos agora.
+      O painel de vendas não precisa dessa consulta
+      para calcular os períodos.
+
+      Mantemos um array para não quebrar o index.html.
+    */
+
+    const produtos = [];
+
+    // =====================================================
+    // RESUMO DE UM PERÍODO
+    // =====================================================
+
+    function calcularPeriodo(
+      dataInicial
+    ) {
+
       const resultado = {
+
         total: 0,
+
         pedidos: 0,
+
         marketplaces: {}
+
       };
 
-      for (const pedido of todosPedidos) {
-        const dataPedido = obterDataPedido(pedido);
+      for (
+        const pedido of todosPedidos
+      ) {
 
-        if (!dataPedido) {
+        const dataPedido =
+          obterDataPedido(
+            pedido
+          );
+
+        if (
+          !dataPedido
+        ) {
           continue;
         }
 
@@ -371,22 +320,50 @@ export default async function handler(req, res) {
           continue;
         }
 
-        const nome = descobrirMarketplace(pedido);
-        const valor = obterValorPedido(pedido);
+        const marketplace =
+          descobrirMarketplace(
+            pedido
+          );
 
-        resultado.total += valor;
+        const valor =
+          obterValorPedido(
+            pedido
+          );
+
+        resultado.total +=
+          valor;
+
         resultado.pedidos++;
 
-        if (!resultado.marketplaces[nome]) {
-          resultado.marketplaces[nome] = {
-            nome,
+        if (
+          !resultado.marketplaces[
+            marketplace
+          ]
+        ) {
+
+          resultado.marketplaces[
+            marketplace
+          ] = {
+
+            nome: marketplace,
+
             faturamento: 0,
+
             pedidos: 0
+
           };
+
         }
 
-        resultado.marketplaces[nome].faturamento += valor;
-        resultado.marketplaces[nome].pedidos++;
+        resultado.marketplaces[
+          marketplace
+        ].faturamento +=
+          valor;
+
+        resultado.marketplaces[
+          marketplace
+        ].pedidos++;
+
       }
 
       return resultado;
@@ -396,43 +373,99 @@ export default async function handler(req, res) {
     // PERÍODOS
     // =====================================================
 
-    const periodoOntem = calcularPeriodo(ontemStr);
-    const periodo7 = calcularPeriodo(inicio7Str);
-    const periodo15 = calcularPeriodo(inicio15Str);
-    const periodo30 = calcularPeriodo(inicio30Str);
+    const periodoOntem =
+      calcularPeriodo(
+        ontemStr
+      );
+
+    const periodo7 =
+      calcularPeriodo(
+        inicio7Str
+      );
+
+    const periodo15 =
+      calcularPeriodo(
+        inicio15Str
+      );
+
+    const periodo30 =
+      calcularPeriodo(
+        inicio30Str
+      );
 
     // =====================================================
-    // FATURAMENTO DE HOJE
+    // HOJE
     // =====================================================
 
-    const totaisHoje = {};
+    const hojeResumo = {
 
-    let faturamentoHoje = 0;
-    let pedidosHoje = 0;
+      total: 0,
 
-    for (const pedido of todosPedidos) {
-      const dataPedido = obterDataPedido(pedido);
+      pedidos: 0,
 
-      if (dataPedido !== hojeStr) {
+      marketplaces: {}
+
+    };
+
+    for (
+      const pedido of todosPedidos
+    ) {
+
+      const dataPedido =
+        obterDataPedido(
+          pedido
+        );
+
+      if (
+        dataPedido !== hojeStr
+      ) {
         continue;
       }
 
-      const nome = descobrirMarketplace(pedido);
-      const valor = obterValorPedido(pedido);
+      const marketplace =
+        descobrirMarketplace(
+          pedido
+        );
 
-      faturamentoHoje += valor;
-      pedidosHoje++;
+      const valor =
+        obterValorPedido(
+          pedido
+        );
 
-      if (!totaisHoje[nome]) {
-        totaisHoje[nome] = {
-          nome,
+      hojeResumo.total +=
+        valor;
+
+      hojeResumo.pedidos++;
+
+      if (
+        !hojeResumo.marketplaces[
+          marketplace
+        ]
+      ) {
+
+        hojeResumo.marketplaces[
+          marketplace
+        ] = {
+
+          nome: marketplace,
+
           faturamento: 0,
+
           pedidos: 0
+
         };
+
       }
 
-      totaisHoje[nome].faturamento += valor;
-      totaisHoje[nome].pedidos++;
+      hojeResumo.marketplaces[
+        marketplace
+      ].faturamento +=
+        valor;
+
+      hojeResumo.marketplaces[
+        marketplace
+      ].pedidos++;
+
     }
 
     // =====================================================
@@ -440,36 +473,62 @@ export default async function handler(req, res) {
     // =====================================================
 
     const ordem = [
+
       "Mercado Livre",
+
       "Shopee",
+
       "TikTok Shop",
+
       "Amazon",
+
       "Outros"
+
     ];
 
-    const marketplaces = ordem
-      .filter((nome) => totaisHoje[nome])
-      .map((nome) => totaisHoje[nome]);
+    const marketplaces =
+      ordem
+        .filter(
+          nome =>
+            hojeResumo.marketplaces[
+              nome
+            ]
+        )
+        .map(
+          nome =>
+            hojeResumo.marketplaces[
+              nome
+            ]
+        );
 
-    const totalMarketplaces = marketplaces.reduce(
-      (soma, item) => soma + item.faturamento,
-      0
-    );
+    const totalMarketplaces =
+      marketplaces.reduce(
+        (total, item) =>
+          total +
+          Number(
+            item.faturamento || 0
+          ),
+        0
+      );
 
     // =====================================================
     // TICKET MÉDIO
     // =====================================================
 
     const ticketMedio =
-      pedidosHoje > 0
-        ? faturamentoHoje / pedidosHoje
+      hojeResumo.pedidos > 0
+
+        ? hojeResumo.total /
+          hojeResumo.pedidos
+
         : 0;
 
     // =====================================================
-    // RETORNO
+    // RESPOSTA
     // =====================================================
 
     return res.status(200).json({
+
       success: true,
 
       data: todosPedidos,
@@ -478,9 +537,11 @@ export default async function handler(req, res) {
 
       produtos,
 
-      faturamentoHoje,
+      faturamentoHoje:
+        hojeResumo.total,
 
-      pedidosHoje,
+      pedidosHoje:
+        hojeResumo.pedidos,
 
       ticketMedio,
 
@@ -489,21 +550,39 @@ export default async function handler(req, res) {
       totalMarketplaces,
 
       periodos: {
-        ontem: periodoOntem,
-        seteDias: periodo7,
-        quinzeDias: periodo15,
-        trintaDias: periodo30
+
+        ontem:
+          periodoOntem,
+
+        seteDias:
+          periodo7,
+
+        quinzeDias:
+          periodo15,
+
+        trintaDias:
+          periodo30
+
       }
+
     });
 
   } catch (error) {
-    console.error(error);
+
+    console.error(
+      "Erro Bling:",
+      error
+    );
 
     return res.status(500).json({
+
       success: false,
+
       error:
         error?.message ||
-        "Erro interno do servidor"
+        "Erro ao consultar o Bling."
+
     });
+
   }
 }
