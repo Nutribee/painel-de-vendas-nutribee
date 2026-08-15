@@ -22,126 +22,193 @@ export default async function handler(req, res) {
       "enable-jwt": "1"
     };
 
-    // =====================================================
-    // DATA DE HOJE - HORÁRIO DE BRASÍLIA
-    // =====================================================
-
-    const agora = new Date();
+    // =========================================================
+    // DATA DE HOJE - HORÁRIO DO BRASIL
+    // =========================================================
 
     const hoje = new Intl.DateTimeFormat("en-CA", {
       timeZone: "America/Sao_Paulo",
       year: "numeric",
       month: "2-digit",
       day: "2-digit"
-    }).format(agora);
+    }).format(new Date());
 
-    // =====================================================
-    // BUSCAR PRODUTOS
-    // =====================================================
-
-    const produtosResponse = await fetch(
-      "https://api.bling.com.br/Api/v3/produtos?pagina=1&limite=100",
-      {
-        headers
-      }
-    );
-
-    const produtos = await produtosResponse.json();
-
-    if (!produtosResponse.ok) {
-      return res.status(produtosResponse.status).json({
-        success: false,
-        error: JSON.stringify(produtos)
-      });
-    }
-
-    // =====================================================
+    // =========================================================
     // BUSCAR TODOS OS PEDIDOS DO DIA
-    // PAGINAÇÃO AUTOMÁTICA
-    // =====================================================
+    // O BLING DEVOLVE ATÉ 100 POR PÁGINA
+    // =========================================================
 
-    let todosPedidos = [];
+    async function buscarTodosPedidos() {
+      const todosPedidos = [];
 
-    let pagina = 1;
+      let pagina = 1;
+      const limite = 100;
 
-    const limite = 100;
+      while (true) {
+        const url = new URL(
+          "https://api.bling.com.br/Api/v3/pedidos/vendas"
+        );
 
-    while (true) {
-      const url =
-        "https://api.bling.com.br/Api/v3/pedidos/vendas" +
-        `?pagina=${pagina}` +
-        `&limite=${limite}` +
-        `&dataInicial=${hoje}` +
-        `&dataFinal=${hoje}`;
+        url.searchParams.set("pagina", pagina.toString());
+        url.searchParams.set("limite", limite.toString());
 
-      const pedidosResponse = await fetch(url, {
-        headers
-      });
+        // Pedidos emitidos hoje
+        url.searchParams.set("dataInicial", hoje);
+        url.searchParams.set("dataFinal", hoje);
 
-      const pedidos = await pedidosResponse.json();
-
-      if (!pedidosResponse.ok) {
-        return res.status(pedidosResponse.status).json({
-          success: false,
-          error: JSON.stringify(pedidos),
-          pagina
+        const response = await fetch(url.toString(), {
+          method: "GET",
+          headers
         });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          return {
+            sucesso: false,
+            status: response.status,
+            erro: data
+          };
+        }
+
+        const pedidosPagina = Array.isArray(data.data)
+          ? data.data
+          : [];
+
+        todosPedidos.push(...pedidosPagina);
+
+        // Se vieram menos de 100, chegamos ao fim
+        if (pedidosPagina.length < limite) {
+          break;
+        }
+
+        pagina++;
+
+        // Segurança para evitar loop infinito
+        if (pagina > 100) {
+          break;
+        }
       }
 
-      const pedidosDaPagina = pedidos.data || [];
-
-      // Adiciona os pedidos encontrados
-      todosPedidos.push(...pedidosDaPagina);
-
-      // Se retornou menos de 100,
-      // significa que chegamos à última página.
-      if (pedidosDaPagina.length < limite) {
-        break;
-      }
-
-      pagina++;
-
-      // Segurança para evitar loop infinito.
-      // 100 páginas = até 10.000 pedidos.
-      if (pagina > 100) {
-        break;
-      }
-
-      // Respeita o limite da API do Bling.
-      // Espera aproximadamente 350ms entre requisições.
-      await new Promise(resolve => setTimeout(resolve, 350));
+      return {
+        sucesso: true,
+        dados: todosPedidos
+      };
     }
 
-    // =====================================================
-    // RETORNO
-    // =====================================================
+    // =========================================================
+    // BUSCAR TODOS OS PRODUTOS
+    // =========================================================
+
+    async function buscarTodosProdutos() {
+      const todosProdutos = [];
+
+      let pagina = 1;
+      const limite = 100;
+
+      while (true) {
+        const url = new URL(
+          "https://api.bling.com.br/Api/v3/produtos"
+        );
+
+        url.searchParams.set("pagina", pagina.toString());
+        url.searchParams.set("limite", limite.toString());
+
+        const response = await fetch(url.toString(), {
+          method: "GET",
+          headers
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          return {
+            sucesso: false,
+            status: response.status,
+            erro: data
+          };
+        }
+
+        const produtosPagina = Array.isArray(data.data)
+          ? data.data
+          : [];
+
+        todosProdutos.push(...produtosPagina);
+
+        if (produtosPagina.length < limite) {
+          break;
+        }
+
+        pagina++;
+
+        // Segurança para evitar loop infinito
+        if (pagina > 1000) {
+          break;
+        }
+      }
+
+      return {
+        sucesso: true,
+        dados: todosProdutos
+      };
+    }
+
+    // =========================================================
+    // EXECUTAR AS DUAS BUSCAS
+    // =========================================================
+
+    const [resultadoPedidos, resultadoProdutos] =
+      await Promise.all([
+        buscarTodosPedidos(),
+        buscarTodosProdutos()
+      ]);
+
+    // =========================================================
+    // ERRO NOS PEDIDOS
+    // =========================================================
+
+    if (!resultadoPedidos.sucesso) {
+      return res.status(resultadoPedidos.status || 500).json({
+        success: false,
+        error: JSON.stringify(resultadoPedidos.erro)
+      });
+    }
+
+    // =========================================================
+    // ERRO NOS PRODUTOS
+    // =========================================================
+
+    if (!resultadoProdutos.sucesso) {
+      return res.status(resultadoProdutos.status || 500).json({
+        success: false,
+        error: JSON.stringify(resultadoProdutos.erro)
+      });
+    }
+
+    // =========================================================
+    // RETORNO FINAL
+    // =========================================================
 
     return res.status(200).json({
       success: true,
 
-      dataAtualizacao: hoje,
+      data: hoje,
 
-      totalPedidos: todosPedidos.length,
+      pedidos: resultadoPedidos.dados,
 
-      totalProdutos: (produtos.data || []).length,
+      produtos: resultadoProdutos.dados,
 
-      paginasConsultadas: pagina,
+      totalPedidos: resultadoPedidos.dados.length,
 
-      produtos: produtos.data || [],
-
-      pedidos: todosPedidos
+      totalProdutos: resultadoProdutos.dados.length
     });
 
   } catch (error) {
-
-    console.error(
-      "Erro ao buscar dados do Bling:",
-      error
-    );
+    console.error("Erro ao buscar dados do Bling:", error);
 
     return res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message || "Erro interno ao buscar dados do Bling"
     });
   }
 }
