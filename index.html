@@ -2,543 +2,207 @@
 <html lang="pt-BR">
 
 <head>
-
 <meta charset="UTF-8">
-
-<meta
-  name="viewport"
-  content="width=device-width, initial-scale=1.0"
->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Painel de Vendas Nutribee</title>
 
-
 <style>
-
 * {
   box-sizing: border-box;
 }
 
-
 body {
-
   margin: 0;
-
-  font-family:
-    Arial,
-    sans-serif;
-
-  background:
-    #f5f7f6;
-
-  color:
-    #222;
-
+  font-family: Arial, sans-serif;
+  background: #f5f7f6;
+  color: #222;
 }
-
 
 header {
-
-  background:
-    #111;
-
-  color:
-    white;
-
-  padding:
-    20px;
-
+  background: #111;
+  color: white;
+  padding: 20px;
 }
-
 
 header h1 {
-
-  margin:
-    0;
-
-  font-size:
-    24px;
-
+  margin: 0;
+  font-size: 24px;
 }
-
 
 header p {
-
-  margin:
-    6px 0 0;
-
-  color:
-    #ccc;
-
+  margin: 6px 0 0;
+  color: #ccc;
 }
-
 
 .container {
-
-  padding:
-    20px;
-
-  max-width:
-    1400px;
-
-  margin:
-    auto;
-
+  padding: 20px;
+  max-width: 1400px;
+  margin: auto;
 }
-
 
 .acoes {
-
-  display:
-    flex;
-
-  gap:
-    10px;
-
-  flex-wrap:
-    wrap;
-
-  margin-bottom:
-    20px;
-
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
 }
-
 
 button {
-
-  border:
-    0;
-
-  border-radius:
-    8px;
-
-  padding:
-    13px 18px;
-
-  cursor:
-    pointer;
-
-  font-weight:
-    bold;
-
-  font-size:
-    15px;
-
+  border: 0;
+  border-radius: 8px;
+  padding: 13px 18px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 15px;
 }
-
 
 .btn-principal {
-
-  background:
-    #159447;
-
-  color:
-    white;
-
+  background: #159447;
+  color: white;
 }
-
 
 .btn-secundario {
-
-  background:
-    #ddd;
-
-  color:
-    #222;
-
+  background: #ddd;
+  color: #222;
 }
-
 
 .status {
-
-  background:
-    white;
-
-  padding:
-    14px;
-
-  border-radius:
-    10px;
-
-  margin-bottom:
-    20px;
-
-  border-left:
-    5px solid #159447;
-
+  background: white;
+  padding: 14px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  border-left: 5px solid #159447;
 }
-
 
 .status.erro {
-
-  border-left-color:
-    #d93025;
-
-  color:
-    #b00020;
-
+  border-left-color: #d93025;
+  color: #b00020;
 }
 
+.cards,
+.periodos,
+.marketplaces {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 15px;
+}
 
 .cards {
-
-  display:
-    grid;
-
-  grid-template-columns:
-    repeat(
-      auto-fit,
-      minmax(220px, 1fr)
-    );
-
-  gap:
-    15px;
-
-  margin-bottom:
-    30px;
-
+  margin-bottom: 30px;
 }
 
-
-.card {
-
-  background:
-    white;
-
-  border-radius:
-    12px;
-
-  padding:
-    20px;
-
-  box-shadow:
-    0 2px 8px
-    rgba(0,0,0,0.08);
-
+.card,
+.periodo,
+.marketplace,
+.tabela {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
-
 
 .card span {
-
-  display:
-    block;
-
-  color:
-    #777;
-
-  font-size:
-    15px;
-
-  margin-bottom:
-    8px;
-
+  display: block;
+  color: #777;
+  font-size: 15px;
+  margin-bottom: 8px;
 }
-
 
 .card strong {
-
-  font-size:
-    26px;
-
+  font-size: 26px;
 }
-
 
 .secao {
-
-  margin-bottom:
-    30px;
-
+  margin-bottom: 30px;
 }
-
 
 .secao h2 {
-
-  font-size:
-    25px;
-
-  margin-bottom:
-    15px;
-
+  font-size: 25px;
+  margin-bottom: 15px;
 }
 
-
-.periodos {
-
-  display:
-    grid;
-
-  grid-template-columns:
-    repeat(
-      auto-fit,
-      minmax(220px, 1fr)
-    );
-
-  gap:
-    15px;
-
-}
-
-
-.periodo {
-
-  background:
-    white;
-
-  border-radius:
-    12px;
-
-  padding:
-    20px;
-
-  border-top:
-    5px solid #159447;
-
-  box-shadow:
-    0 2px 8px
-    rgba(0,0,0,0.08);
-
-}
-
-
-.periodo-nome {
-
-  font-weight:
-    bold;
-
-  font-size:
-    18px;
-
-  margin-bottom:
-    12px;
-
-}
-
-
-.periodo-valor {
-
-  font-size:
-    25px;
-
-  font-weight:
-    bold;
-
-  margin-bottom:
-    8px;
-
-}
-
-
-.periodo-pedidos {
-
-  color:
-    #777;
-
-}
-
-
-.marketplaces {
-
-  display:
-    grid;
-
-  grid-template-columns:
-    repeat(
-      auto-fit,
-      minmax(220px, 1fr)
-    );
-
-  gap:
-    15px;
-
-}
-
-
+.periodo,
 .marketplace {
-
-  background:
-    white;
-
-  border-radius:
-    12px;
-
-  padding:
-    20px;
-
-  border-top:
-    5px solid #159447;
-
-  box-shadow:
-    0 2px 8px
-    rgba(0,0,0,0.08);
-
+  border-top: 5px solid #159447;
 }
 
-
+.periodo-nome,
 .marketplace-nome {
-
-  font-size:
-    18px;
-
-  font-weight:
-    bold;
-
-  margin-bottom:
-    14px;
-
+  font-weight: bold;
+  font-size: 18px;
+  margin-bottom: 12px;
 }
 
-
+.periodo-valor,
 .marketplace-valor {
-
-  font-size:
-    25px;
-
-  font-weight:
-    bold;
-
-  margin-bottom:
-    8px;
-
+  font-size: 25px;
+  font-weight: bold;
+  margin-bottom: 8px;
 }
 
-
+.periodo-pedidos,
 .marketplace-pedidos {
-
-  color:
-    #777;
-
+  color: #777;
 }
-
 
 .tabela {
-
-  background:
-    white;
-
-  border-radius:
-    12px;
-
-  padding:
-    20px;
-
-  overflow-x:
-    auto;
-
+  overflow-x: auto;
 }
-
 
 table {
-
-  width:
-    100%;
-
-  border-collapse:
-    collapse;
-
-  min-width:
-    650px;
-
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 650px;
 }
-
 
 th,
 td {
-
-  padding:
-    12px;
-
-  border-bottom:
-    1px solid #eee;
-
-  text-align:
-    left;
-
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
 }
-
 
 th {
-
-  background:
-    #f0f0f0;
-
+  background: #f0f0f0;
 }
-
 
 .vazio {
-
-  text-align:
-    center;
-
-  padding:
-    30px;
-
-  color:
-    #777;
-
+  text-align: center;
+  padding: 30px;
+  color: #777;
 }
 
-
-@media (
-  max-width: 600px
-) {
+@media (max-width: 600px) {
 
   .container {
-
-    padding:
-      12px;
-
+    padding: 12px;
   }
-
 
   header h1 {
-
-    font-size:
-      20px;
-
+    font-size: 20px;
   }
-
 
   .card strong {
-
-    font-size:
-      22px;
-
+    font-size: 22px;
   }
-
 
   .periodo-valor,
   .marketplace-valor {
-
-    font-size:
-      22px;
-
+    font-size: 22px;
   }
-
 }
-
 </style>
-
 </head>
-
 
 <body>
 
-
 <header>
-
-<h1>
-  📊 Painel de Vendas Nutribee
-</h1>
-
-<p>
-  Vendas, pedidos, produtos, custos e resultados
-</p>
-
+  <h1>📊 Painel de Vendas Nutribee</h1>
+  <p>Vendas, pedidos, produtos, custos e resultados</p>
 </header>
 
-
 <div class="container">
-
 
 <div class="acoes">
 
@@ -549,7 +213,6 @@ th {
   🔄 Atualizar Bling
 </button>
 
-
 <button
   class="btn-secundario"
   onclick="autorizarBling()"
@@ -559,276 +222,112 @@ th {
 
 </div>
 
-
-<div
-  id="status"
-  class="status"
->
+<div id="status" class="status">
   Aguardando conexão com o Bling...
 </div>
 
-
-<!-- =====================================================
-     RESUMO
-===================================================== -->
+<!-- RESUMO -->
 
 <div class="cards">
 
+<div class="card">
+<span>Faturamento de hoje</span>
+<strong id="faturamento">R$ 0,00</strong>
+</div>
 
 <div class="card">
-
-<span>
-  Faturamento de hoje
-</span>
-
-<strong id="faturamento">
-  R$ 0,00
-</strong>
-
+<span>Pedidos de hoje</span>
+<strong id="totalPedidos">0</strong>
 </div>
-
 
 <div class="card">
-
-<span>
-  Pedidos de hoje
-</span>
-
-<strong id="totalPedidos">
-  0
-</strong>
-
+<span>Produtos</span>
+<strong id="totalProdutos">0</strong>
 </div>
-
 
 <div class="card">
-
-<span>
-  Produtos
-</span>
-
-<strong id="totalProdutos">
-  0
-</strong>
+<span>Ticket médio</span>
+<strong id="ticketMedio">R$ 0,00</strong>
+</div>
 
 </div>
 
-
-<div class="card">
-
-<span>
-  Ticket médio
-</span>
-
-<strong id="ticketMedio">
-  R$ 0,00
-</strong>
-
-</div>
-
-
-</div>
-
-
-<!-- =====================================================
-     PERÍODOS
-===================================================== -->
+<!-- PERÍODOS -->
 
 <div class="secao">
 
-<h2>
-  📅 Vendas por período
-</h2>
-
+<h2>📅 Vendas por período</h2>
 
 <div class="periodos">
 
+<div class="periodo">
+<div class="periodo-nome">Ontem</div>
+<div class="periodo-valor" id="valorOntem">R$ 0,00</div>
+<div class="periodo-pedidos" id="pedidosOntem">0 pedidos</div>
+</div>
 
 <div class="periodo">
-
-<div class="periodo-nome">
-  Ontem
+<div class="periodo-nome">Últimos 7 dias</div>
+<div class="periodo-valor" id="valor7">R$ 0,00</div>
+<div class="periodo-pedidos" id="pedidos7">0 pedidos</div>
 </div>
-
-<div
-  class="periodo-valor"
-  id="valorOntem"
->
-  R$ 0,00
-</div>
-
-<div
-  class="periodo-pedidos"
-  id="pedidosOntem"
->
-  0 pedidos
-</div>
-
-</div>
-
 
 <div class="periodo">
-
-<div class="periodo-nome">
-  Últimos 7 dias
+<div class="periodo-nome">Últimos 15 dias</div>
+<div class="periodo-valor" id="valor15">R$ 0,00</div>
+<div class="periodo-pedidos" id="pedidos15">0 pedidos</div>
 </div>
-
-<div
-  class="periodo-valor"
-  id="valor7"
->
-  R$ 0,00
-</div>
-
-<div
-  class="periodo-pedidos"
-  id="pedidos7"
->
-  0 pedidos
-</div>
-
-</div>
-
 
 <div class="periodo">
-
-<div class="periodo-nome">
-  Últimos 15 dias
-</div>
-
-<div
-  class="periodo-valor"
-  id="valor15"
->
-  R$ 0,00
-</div>
-
-<div
-  class="periodo-pedidos"
-  id="pedidos15"
->
-  0 pedidos
+<div class="periodo-nome">Últimos 30 dias</div>
+<div class="periodo-valor" id="valor30">R$ 0,00</div>
+<div class="periodo-pedidos" id="pedidos30">0 pedidos</div>
 </div>
 
 </div>
-
-
-<div class="periodo">
-
-<div class="periodo-nome">
-  Últimos 30 dias
 </div>
 
-<div
-  class="periodo-valor"
-  id="valor30"
->
-  R$ 0,00
-</div>
-
-<div
-  class="periodo-pedidos"
-  id="pedidos30"
->
-  0 pedidos
-</div>
-
-</div>
-
-
-</div>
-
-</div>
-
-
-<!-- =====================================================
-     MARKETPLACES
-===================================================== -->
+<!-- MARKETPLACES -->
 
 <div class="secao">
 
-<h2>
-  💰 Faturamento por marketplace
-</h2>
+<h2>💰 Faturamento por marketplace</h2>
 
-
-<div
-  id="marketplaces"
-  class="marketplaces"
->
+<div id="marketplaces" class="marketplaces">
 
 <div class="marketplace">
-
-<div class="marketplace-nome">
-  Carregando...
-</div>
-
-<div class="marketplace-valor">
-  R$ 0,00
-</div>
-
-<div class="marketplace-pedidos">
-  0 pedidos
+<div class="marketplace-nome">Carregando...</div>
+<div class="marketplace-valor">R$ 0,00</div>
+<div class="marketplace-pedidos">0 pedidos</div>
 </div>
 
 </div>
 
 </div>
 
-</div>
-
-
-<!-- =====================================================
-     ÚLTIMOS PEDIDOS
-===================================================== -->
+<!-- ÚLTIMOS PEDIDOS -->
 
 <div class="tabela">
 
-<h2>
-  Últimos pedidos
-</h2>
-
+<h2>📦 Últimos pedidos</h2>
 
 <table>
 
 <thead>
-
 <tr>
-
-<th>
-  Pedido
-</th>
-
-<th>
-  Marketplace
-</th>
-
-<th>
-  Data
-</th>
-
-<th>
-  Valor
-</th>
-
+<th>Pedido</th>
+<th>Marketplace</th>
+<th>Data</th>
+<th>Valor</th>
 </tr>
-
 </thead>
 
-
-<tbody
-  id="tabelaPedidos"
->
+<tbody id="tabelaPedidos">
 
 <tr>
-
-<td
-  colspan="4"
-  class="vazio"
->
-  Nenhum pedido carregado.
+<td colspan="4" class="vazio">
+Nenhum pedido carregado.
 </td>
-
 </tr>
 
 </tbody>
@@ -837,40 +336,1013 @@ th {
 
 </div>
 
-
 </div>
-
 
 <script>
 
+/* ======================================================
+   VARIÁVEL GLOBAL
+====================================================== */
 
-// ========================================================
-// MOEDA
-// ========================================================
+let dadosAtuais = null;
 
-function moeda(
-  valor
-) {
 
-  return Number(
-    valor || 0
-  ).toLocaleString(
+/* ======================================================
+   MOEDA
+====================================================== */
+
+function moeda(valor) {
+
+  return Number(valor || 0).toLocaleString(
     "pt-BR",
     {
-      style:
-        "currency",
-
-      currency:
-        "BRL"
+      style: "currency",
+      currency: "BRL"
     }
   );
 
 }
 
 
-// ========================================================
-// CARREGAR BLING
-// ========================================================
+/* ======================================================
+   DATA
+====================================================== */
+
+function extrairData(pedido) {
+
+  const valor =
+    pedido?.data ||
+    pedido?.dataPedido ||
+    pedido?.dataEmissao ||
+    pedido?.createdAt ||
+    pedido?.created_at ||
+    pedido?.date ||
+    pedido?.dataCriacao ||
+    pedido?.dataCriacaoPedido;
+
+  if (!valor) {
+    return null;
+  }
+
+  const data = new Date(valor);
+
+  if (isNaN(data.getTime())) {
+    return null;
+  }
+
+  return data;
+
+}
+
+
+/* ======================================================
+   DATA BRASIL
+====================================================== */
+
+function dataBrasil(pedido) {
+
+  const data = extrairData(pedido);
+
+  if (!data) {
+    return "-";
+  }
+
+  return data.toLocaleDateString(
+    "pt-BR"
+  );
+
+}
+
+
+/* ======================================================
+   VALOR DO PEDIDO
+====================================================== */
+
+function extrairValor(pedido) {
+
+  const valores = [
+
+    pedido?.total,
+    pedido?.valor,
+    pedido?.valorTotal,
+    pedido?.totalPedido,
+    pedido?.valorTotalPedido,
+
+    pedido?.totalVenda,
+    pedido?.valorVenda,
+
+    pedido?.totais?.valorTotal,
+    pedido?.totais?.total,
+
+    pedido?.resumo?.valorTotal
+
+  ];
+
+  for (const valor of valores) {
+
+    if (
+      valor !== undefined &&
+      valor !== null &&
+      valor !== ""
+    ) {
+
+      const numero =
+        Number(
+          String(valor)
+            .replace("R$", "")
+            .replace(/\./g, "")
+            .replace(",", ".")
+            .trim()
+        );
+
+      if (!isNaN(numero)) {
+        return numero;
+      }
+
+    }
+
+  }
+
+  return 0;
+
+}
+
+
+/* ======================================================
+   TEXTO PARA IDENTIFICAR MARKETPLACE
+====================================================== */
+
+function procurarTexto(obj) {
+
+  const encontrados = [];
+
+  function percorrer(valor, nivel = 0) {
+
+    if (nivel > 5) {
+      return;
+    }
+
+    if (
+      valor === null ||
+      valor === undefined
+    ) {
+      return;
+    }
+
+    if (
+      typeof valor === "string"
+    ) {
+
+      encontrados.push(valor);
+      return;
+
+    }
+
+    if (
+      typeof valor === "number"
+    ) {
+
+      encontrados.push(String(valor));
+      return;
+
+    }
+
+    if (
+      Array.isArray(valor)
+    ) {
+
+      for (const item of valor) {
+        percorrer(item, nivel + 1);
+      }
+
+      return;
+    }
+
+    if (
+      typeof valor === "object"
+    ) {
+
+      for (
+        const chave of Object.keys(valor)
+      ) {
+
+        percorrer(
+          valor[chave],
+          nivel + 1
+        );
+
+      }
+
+    }
+
+  }
+
+  percorrer(obj);
+
+  return encontrados.join(" ").toLowerCase();
+
+}
+
+
+/* ======================================================
+   IDENTIFICAR MARKETPLACE
+====================================================== */
+
+function identificarMarketplace(pedido) {
+
+  /* Primeiro tenta campos específicos */
+
+  const campos = [
+
+    pedido?.marketplace,
+    pedido?.origem,
+    pedido?.canal,
+    pedido?.canalVenda,
+    pedido?.nomeCanal,
+    pedido?.descricaoCanal,
+    pedido?.loja,
+    pedido?.nomeLoja,
+    pedido?.nomeMarketplace,
+
+    pedido?.canaisVenda?.nome,
+    pedido?.canalVenda?.nome,
+    pedido?.canal?.nome,
+    pedido?.loja?.nome,
+
+    pedido?.origem?.nome,
+    pedido?.marketplace?.nome,
+
+    pedido?.integracao?.nome,
+    pedido?.integracao?.descricao,
+
+    pedido?.ecommerce?.nome,
+    pedido?.ecommerce?.descricao
+
+  ];
+
+  const textoEspecifico =
+    campos
+      .filter(
+        x =>
+          x !== undefined &&
+          x !== null
+      )
+      .map(
+        x =>
+          typeof x === "object"
+            ? JSON.stringify(x)
+            : String(x)
+      )
+      .join(" ")
+      .toLowerCase();
+
+
+  const texto =
+    textoEspecifico +
+    " " +
+    procurarTexto(pedido);
+
+
+  /* MERCADO LIVRE */
+
+  if (
+    texto.includes("mercado livre") ||
+    texto.includes("mercadolivre") ||
+    texto.includes("mercado-livre") ||
+    texto.includes("meli")
+  ) {
+
+    return "Mercado Livre";
+
+  }
+
+
+  /* SHOPEE */
+
+  if (
+    texto.includes("shopee")
+  ) {
+
+    return "Shopee";
+
+  }
+
+
+  /* AMAZON */
+
+  if (
+    texto.includes("amazon")
+  ) {
+
+    return "Amazon";
+
+  }
+
+
+  /* TIKTOK */
+
+  if (
+    texto.includes("tiktok") ||
+    texto.includes("tik tok")
+  ) {
+
+    return "TikTok Shop";
+
+  }
+
+
+  /* MAGALU */
+
+  if (
+    texto.includes("magalu") ||
+    texto.includes("magazine luiza") ||
+    texto.includes("magazine")
+  ) {
+
+    return "Magalu";
+
+  }
+
+
+  /* TEMU */
+
+  if (
+    texto.includes("temu")
+  ) {
+
+    return "Temu";
+
+  }
+
+
+  /* NUVEMSHOP */
+
+  if (
+    texto.includes("nuvemshop") ||
+    texto.includes("nuvem shop")
+  ) {
+
+    return "Nuvemshop";
+
+  }
+
+
+  /* BLING */
+
+  if (
+    texto.includes("bling")
+  ) {
+
+    return "Bling";
+
+  }
+
+
+  return "Outros";
+
+}
+
+
+/* ======================================================
+   NORMALIZAR PEDIDOS
+====================================================== */
+
+function normalizarPedidos(dados) {
+
+  let pedidos = [];
+
+  if (
+    Array.isArray(dados?.pedidos)
+  ) {
+
+    pedidos =
+      dados.pedidos;
+
+  } else if (
+    Array.isArray(dados?.pedidosProcessados)
+  ) {
+
+    pedidos =
+      dados.pedidosProcessados;
+
+  } else if (
+    Array.isArray(dados?.data)
+  ) {
+
+    pedidos =
+      dados.data;
+
+  }
+
+
+  return pedidos.map(
+    pedido => ({
+
+      original:
+        pedido,
+
+      id:
+        pedido?.numero ||
+        pedido?.id ||
+        pedido?.numeroPedido ||
+        "-",
+
+      valor:
+        extrairValor(pedido),
+
+      data:
+        extrairData(pedido),
+
+      marketplace:
+        identificarMarketplace(pedido)
+
+    })
+  );
+
+}
+
+
+/* ======================================================
+   INÍCIO DO DIA
+====================================================== */
+
+function inicioDoDia(data) {
+
+  const d =
+    new Date(data);
+
+  d.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+  return d;
+
+}
+
+
+/* ======================================================
+   HOJE
+====================================================== */
+
+function ehHoje(data) {
+
+  if (!data) {
+    return false;
+  }
+
+  const hoje =
+    inicioDoDia(
+      new Date()
+    );
+
+  const dia =
+    inicioDoDia(
+      data
+    );
+
+  return (
+    dia.getTime() ===
+    hoje.getTime()
+  );
+
+}
+
+
+/* ======================================================
+   ONTEM
+====================================================== */
+
+function ehOntem(data) {
+
+  if (!data) {
+    return false;
+  }
+
+  const ontem =
+    inicioDoDia(
+      new Date()
+    );
+
+  ontem.setDate(
+    ontem.getDate() - 1
+  );
+
+  const dia =
+    inicioDoDia(
+      data
+    );
+
+  return (
+    dia.getTime() ===
+    ontem.getTime()
+  );
+
+}
+
+
+/* ======================================================
+   PERÍODO
+====================================================== */
+
+function calcularPeriodo(
+  pedidos,
+  quantidadeDias
+) {
+
+  const hoje =
+    inicioDoDia(
+      new Date()
+    );
+
+  const inicio =
+    new Date(
+      hoje
+    );
+
+  inicio.setDate(
+    inicio.getDate() -
+    (
+      quantidadeDias - 1
+    )
+  );
+
+  let faturamento = 0;
+  let quantidade = 0;
+
+  for (
+    const pedido of pedidos
+  ) {
+
+    if (!pedido.data) {
+      continue;
+    }
+
+    const data =
+      inicioDoDia(
+        pedido.data
+      );
+
+    if (
+      data >= inicio &&
+      data <= hoje
+    ) {
+
+      faturamento +=
+        pedido.valor;
+
+      quantidade++;
+
+    }
+
+  }
+
+  return {
+    faturamento,
+    pedidos: quantidade
+  };
+
+}
+
+
+/* ======================================================
+   RESUMO
+====================================================== */
+
+function atualizarResumo(
+  pedidos
+) {
+
+  const pedidosHoje =
+    pedidos.filter(
+      pedido =>
+        ehHoje(
+          pedido.data
+        )
+    );
+
+  const faturamentoHoje =
+    pedidosHoje.reduce(
+      (
+        total,
+        pedido
+      ) =>
+        total +
+        pedido.valor,
+      0
+    );
+
+  const ticket =
+    pedidosHoje.length > 0
+      ? faturamentoHoje /
+        pedidosHoje.length
+      : 0;
+
+
+  document.getElementById(
+    "faturamento"
+  ).innerText =
+    moeda(
+      faturamentoHoje
+    );
+
+
+  document.getElementById(
+    "totalPedidos"
+  ).innerText =
+    pedidosHoje.length;
+
+
+  const produtos =
+    dadosAtuais?.totalProdutos ||
+    dadosAtuais?.produtos?.length ||
+    0;
+
+
+  document.getElementById(
+    "totalProdutos"
+  ).innerText =
+    produtos;
+
+
+  document.getElementById(
+    "ticketMedio"
+  ).innerText =
+    moeda(
+      ticket
+    );
+
+}
+
+
+/* ======================================================
+   PERÍODOS
+====================================================== */
+
+function atualizarPeriodos(
+  pedidos
+) {
+
+  const ontem =
+    pedidos.filter(
+      pedido =>
+        ehOntem(
+          pedido.data
+        )
+    );
+
+  const periodo7 =
+    calcularPeriodo(
+      pedidos,
+      7
+    );
+
+  const periodo15 =
+    calcularPeriodo(
+      pedidos,
+      15
+    );
+
+  const periodo30 =
+    calcularPeriodo(
+      pedidos,
+      30
+    );
+
+
+  const faturamentoOntem =
+    ontem.reduce(
+      (
+        total,
+        pedido
+      ) =>
+        total +
+        pedido.valor,
+      0
+    );
+
+
+  document.getElementById(
+    "valorOntem"
+  ).innerText =
+    moeda(
+      faturamentoOntem
+    );
+
+
+  document.getElementById(
+    "pedidosOntem"
+  ).innerText =
+    `${ontem.length} pedidos`;
+
+
+  document.getElementById(
+    "valor7"
+  ).innerText =
+    moeda(
+      periodo7.faturamento
+    );
+
+
+  document.getElementById(
+    "pedidos7"
+  ).innerText =
+    `${periodo7.pedidos} pedidos`;
+
+
+  document.getElementById(
+    "valor15"
+  ).innerText =
+    moeda(
+      periodo15.faturamento
+    );
+
+
+  document.getElementById(
+    "pedidos15"
+  ).innerText =
+    `${periodo15.pedidos} pedidos`;
+
+
+  document.getElementById(
+    "valor30"
+  ).innerText =
+    moeda(
+      periodo30.faturamento
+    );
+
+
+  document.getElementById(
+    "pedidos30"
+  ).innerText =
+    `${periodo30.pedidos} pedidos`;
+
+}
+
+
+/* ======================================================
+   MARKETPLACES
+====================================================== */
+
+function atualizarMarketplaces(
+  pedidos
+) {
+
+  const mapa =
+    new Map();
+
+
+  for (
+    const pedido of pedidos
+  ) {
+
+    const nome =
+      pedido.marketplace ||
+      "Outros";
+
+    if (
+      !mapa.has(nome)
+    ) {
+
+      mapa.set(
+        nome,
+        {
+          nome,
+          faturamento: 0,
+          pedidos: 0
+        }
+      );
+
+    }
+
+
+    const item =
+      mapa.get(
+        nome
+      );
+
+
+    item.faturamento +=
+      pedido.valor;
+
+    item.pedidos++;
+
+  }
+
+
+  const lista =
+    Array.from(
+      mapa.values()
+    )
+    .sort(
+      (
+        a,
+        b
+      ) =>
+        b.faturamento -
+        a.faturamento
+    );
+
+
+  const container =
+    document.getElementById(
+      "marketplaces"
+    );
+
+
+  container.innerHTML = "";
+
+
+  if (
+    lista.length === 0
+  ) {
+
+    container.innerHTML = `
+      <div class="marketplace">
+        <div class="marketplace-nome">
+          Nenhum marketplace encontrado
+        </div>
+        <div class="marketplace-valor">
+          R$ 0,00
+        </div>
+        <div class="marketplace-pedidos">
+          0 pedidos
+        </div>
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  for (
+    const item of lista
+  ) {
+
+    const div =
+      document.createElement(
+        "div"
+      );
+
+    div.className =
+      "marketplace";
+
+
+    div.innerHTML = `
+
+      <div class="marketplace-nome">
+        🛒 ${item.nome}
+      </div>
+
+      <div class="marketplace-valor">
+        ${moeda(item.faturamento)}
+      </div>
+
+      <div class="marketplace-pedidos">
+        ${item.pedidos} pedidos
+      </div>
+
+    `;
+
+
+    container.appendChild(
+      div
+    );
+
+  }
+
+}
+
+
+/* ======================================================
+   ÚLTIMOS PEDIDOS
+====================================================== */
+
+function atualizarPedidos(
+  pedidos
+) {
+
+  const tabela =
+    document.getElementById(
+      "tabelaPedidos"
+    );
+
+
+  tabela.innerHTML = "";
+
+
+  const ordenados =
+    [...pedidos]
+      .sort(
+        (
+          a,
+          b
+        ) => {
+
+          const dataA =
+            a.data
+              ? a.data.getTime()
+              : 0;
+
+          const dataB =
+            b.data
+              ? b.data.getTime()
+              : 0;
+
+          return (
+            dataB -
+            dataA
+          );
+
+        }
+      )
+      .slice(
+        0,
+        30
+      );
+
+
+  if (
+    ordenados.length === 0
+  ) {
+
+    tabela.innerHTML = `
+
+      <tr>
+        <td
+          colspan="4"
+          class="vazio"
+        >
+          Nenhum pedido encontrado.
+        </td>
+      </tr>
+
+    `;
+
+    return;
+
+  }
+
+
+  for (
+    const pedido of ordenados
+  ) {
+
+    const tr =
+      document.createElement(
+        "tr"
+      );
+
+
+    tr.innerHTML = `
+
+      <td>
+        ${pedido.id}
+      </td>
+
+      <td>
+        ${pedido.marketplace}
+      </td>
+
+      <td>
+        ${dataBrasil(pedido.original)}
+      </td>
+
+      <td>
+        ${moeda(pedido.valor)}
+      </td>
+
+    `;
+
+
+    tabela.appendChild(
+      tr
+    );
+
+  }
+
+}
+
+
+/* ======================================================
+   CONECTAR BLING
+====================================================== */
+
+function autorizarBling() {
+
+  window.location.href =
+    "/api/bl ing-auth"
+      .replace(" ", "");
+
+}
+
+
+/* ======================================================
+   CARREGAR DADOS
+====================================================== */
 
 async function carregarDadosBling(
   forcar = false
@@ -888,7 +1360,7 @@ async function carregarDadosBling(
 
 
   status.innerText =
-    "⏳ Buscando todos os dados do Bling...";
+    "⏳ Buscando dados do Bling...";
 
 
   const token =
@@ -903,10 +1375,8 @@ async function carregarDadosBling(
       "erro"
     );
 
-
     status.innerText =
       "⚠️ Bling não está conectado. Clique em Conectar Bling.";
-
 
     return;
 
@@ -920,14 +1390,11 @@ async function carregarDadosBling(
         "/api/bling-dados",
         {
 
-          method:
-            "POST",
+          method: "POST",
 
           headers: {
-
             "Content-Type":
               "application/json"
-
           },
 
           body:
@@ -962,33 +1429,45 @@ async function carregarDadosBling(
     }
 
 
+    dadosAtuais =
+      dados;
+
+
+    const pedidos =
+      normalizarPedidos(
+        dados
+      );
+
+
     atualizarResumo(
-      dados
+      pedidos
     );
 
 
     atualizarPeriodos(
-      dados.periodos
+      pedidos
     );
 
 
     atualizarMarketplaces(
-      dados.marketplaces
+      pedidos
     );
 
 
     atualizarPedidos(
-      dados.ultimosPedidos
+      pedidos
     );
 
 
     status.innerText =
-      `✅ Atualizado com sucesso. ${dados.totalPedidos} pedidos encontrados nos últimos 30 dias.`;
+      `✅ Atualizado com sucesso. ${pedidos.length} pedidos carregados.`;
 
+  }
 
-  } catch (erro) {
+  catch (erro) {
 
     console.error(
+      "Erro:",
       erro
     );
 
@@ -1010,410 +1489,32 @@ async function carregarDadosBling(
 }
 
 
-// ========================================================
-// RESUMO
-// ========================================================
+/* ======================================================
+   INICIALIZAÇÃO
+====================================================== */
 
-function atualizarResumo(
-  dados
-) {
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
 
-  const faturamento =
-    Number(
-      dados.faturamentoHoje ||
-      0
-    );
-
-
-  const pedidos =
-    Array.isArray(
-      dados.pedidosHoje
-    )
-      ? dados.pedidosHoje.length
-      : 0;
+    const token =
+      localStorage.getItem(
+        "bling_access_token"
+      );
 
 
-  const produtos =
-    Number(
-      dados.totalProdutos ||
-      0
-    );
+    if (token) {
 
+      carregarDadosBling(
+        false
+      );
 
-  const ticket =
-    pedidos > 0
-      ? faturamento / pedidos
-      : 0;
-
-
-  document.getElementById(
-    "faturamento"
-  ).innerText =
-    moeda(
-      faturamento
-    );
-
-
-  document.getElementById(
-    "totalPedidos"
-  ).innerText =
-    pedidos;
-
-
-  document.getElementById(
-    "totalProdutos"
-  ).innerText =
-    produtos;
-
-
-  document.getElementById(
-    "ticketMedio"
-  ).innerText =
-    moeda(
-      ticket
-    );
-
-}
-
-
-// ========================================================
-// PERÍODOS
-// ========================================================
-
-function atualizarPeriodos(
-  periodos
-) {
-
-  periodos =
-    periodos || {};
-
-
-  const ontem =
-    periodos.ontem || {};
-
-
-  const sete =
-    periodos.ultimos7 || {};
-
-
-  const quinze =
-    periodos.ultimos15 || {};
-
-
-  const trinta =
-    periodos.ultimos30 || {};
-
-
-  document.getElementById(
-    "valorOntem"
-  ).innerText =
-    moeda(
-      ontem.faturamento
-    );
-
-
-  document.getElementById(
-    "pedidosOntem"
-  ).innerText =
-    `${ontem.pedidos || 0} pedidos`;
-
-
-  document.getElementById(
-    "valor7"
-  ).innerText =
-    moeda(
-      sete.faturamento
-    );
-
-
-  document.getElementById(
-    "pedidos7"
-  ).innerText =
-    `${sete.pedidos || 0} pedidos`;
-
-
-  document.getElementById(
-    "valor15"
-  ).innerText =
-    moeda(
-      quinze.faturamento
-    );
-
-
-  document.getElementById(
-    "pedidos15"
-  ).innerText =
-    `${quinze.pedidos || 0} pedidos`;
-
-
-  document.getElementById(
-    "valor30"
-  ).innerText =
-    moeda(
-      trinta.faturamento
-    );
-
-
-  document.getElementById(
-    "pedidos30"
-  ).innerText =
-    `${trinta.pedidos || 0} pedidos`;
-
-}
-
-
-// ========================================================
-// MARKETPLACES
-// ========================================================
-
-function atualizarMarketplaces(
-  lista
-) {
-
-  const container =
-    document.getElementById(
-      "marketplaces"
-    );
-
-
-  if (
-    !Array.isArray(lista) ||
-    lista.length === 0
-  ) {
-
-    container.innerHTML = `
-
-      <div class="marketplace">
-
-        <div class="marketplace-nome">
-          Nenhum marketplace encontrado
-        </div>
-
-        <div class="marketplace-valor">
-          R$ 0,00
-        </div>
-
-        <div class="marketplace-pedidos">
-          0 pedidos
-        </div>
-
-      </div>
-
-    `;
-
-
-    return;
+    }
 
   }
-
-
-  container.innerHTML =
-    lista
-      .map(
-        item => `
-
-          <div class="marketplace">
-
-            <div class="marketplace-nome">
-              🛒 ${escapeHtml(
-                item.nome ||
-                "Outros"
-              )}
-            </div>
-
-            <div class="marketplace-valor">
-              ${moeda(
-                item.faturamento
-              )}
-            </div>
-
-            <div class="marketplace-pedidos">
-              ${item.pedidos || 0}
-              pedidos
-            </div>
-
-          </div>
-
-        `
-      )
-      .join("");
-
-}
-
-
-// ========================================================
-// PEDIDOS
-// ========================================================
-
-function atualizarPedidos(
-  pedidos
-) {
-
-  const tabela =
-    document.getElementById(
-      "tabelaPedidos"
-    );
-
-
-  if (
-    !Array.isArray(pedidos) ||
-    pedidos.length === 0
-  ) {
-
-    tabela.innerHTML = `
-
-      <tr>
-
-        <td
-          colspan="4"
-          class="vazio"
-        >
-          Nenhum pedido encontrado.
-        </td>
-
-      </tr>
-
-    `;
-
-
-    return;
-
-  }
-
-
-  tabela.innerHTML =
-    pedidos
-      .map(
-        pedido => `
-
-          <tr>
-
-            <td>
-              ${escapeHtml(
-                pedido.numero ||
-                pedido.id ||
-                "-"
-              )}
-            </td>
-
-            <td>
-              ${escapeHtml(
-                pedido.marketplace ||
-                "Outros"
-              )}
-            </td>
-
-            <td>
-              ${formatarData(
-                pedido.data
-              )}
-            </td>
-
-            <td>
-              ${moeda(
-                pedido.total
-              )}
-            </td>
-
-          </tr>
-
-        `
-      )
-      .join("");
-
-}
-
-
-// ========================================================
-// DATA
-// ========================================================
-
-function formatarData(
-  data
-) {
-
-  if (!data) {
-
-    return "-";
-
-  }
-
-
-  const partes =
-    String(data).split("-");
-
-
-  if (
-    partes.length !== 3
-  ) {
-
-    return data;
-
-  }
-
-
-  return (
-    `${partes[2]}/${partes[1]}/${partes[0]}`
-  );
-
-}
-
-
-// ========================================================
-// SEGURANÇA HTML
-// ========================================================
-
-function escapeHtml(
-  texto
-) {
-
-  return String(
-    texto ?? ""
-  )
-  .replace(
-    /&/g,
-    "&amp;"
-  )
-  .replace(
-    /</g,
-    "&lt;"
-  )
-  .replace(
-    />/g,
-    "&gt;"
-  )
-  .replace(
-    /"/g,
-    "&quot;"
-  )
-  .replace(
-    /'/g,
-    "&#039;"
-  );
-
-}
-
-
-// ========================================================
-// CONECTAR BLING
-// ========================================================
-
-function autorizarBling() {
-
-  alert(
-    "A conexão do Bling já está configurada. Se o token estiver válido, use Atualizar Bling."
-  );
-
-}
-
-
-// ========================================================
-// NÃO CARREGAR AUTOMATICAMENTE
-// ========================================================
+);
 
 </script>
 
-
 </body>
-
 </html>
